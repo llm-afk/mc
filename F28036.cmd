@@ -3,7 +3,7 @@ MEMORY
 PAGE 0 :
    RAMPRG      : origin = 0x008000, length = 0x001400  
 
-   APP_SPACE   : origin = 0x3E8000, length = 0x006000    
+   BOOT_SPACE  : origin = 0x3F6000, length = 0x001F80
    CSM_RSVD    : origin = 0x3F7F80, length = 0x000076     
    BEGIN       : origin = 0x3F7FF6, length = 0x000002   
    CSM_PWL     : origin = 0x3F7FF8, length = 0x000008  
@@ -27,24 +27,24 @@ PAGE 1 :
  
 SECTIONS
 {
-   .cinit              : > APP_SPACE    PAGE = 0 
-   .pinit              : > APP_SPACE    PAGE = 0 
-   .text               : > APP_SPACE    PAGE = 0 
-   .binit              : > APP_SPACE    PAGE = 0
-   .ovly               : > APP_SPACE    PAGE = 0
-   codestart           : > BEGIN        PAGE = 0 
+   .cinit              : > BOOT_SPACE    PAGE = 0 
+   .pinit              : > BOOT_SPACE    PAGE = 0 
+   .text               : > BOOT_SPACE    PAGE = 0 
+   .binit              : > BOOT_SPACE    PAGE = 0
+   .ovly               : > BOOT_SPACE    PAGE = 0
+   codestart           : > BEGIN         PAGE = 0 
    ramfuncs            :
    {
 		-lADP32F036_027_Flash_API_ZONE.lib(.econst)
 		-lADP32F036_027_Flash_API_ZONE.lib(.text)
-   }LOAD = APP_SPACE, RUN = RAMPRG, PAGE = 0, TABLE(_prginRAM)
+   }LOAD = BOOT_SPACE, RUN = RAMPRG, PAGE = 0, TABLE(_prginRAM)
 
    .stack              : > RAMM1        PAGE = 1
    .esysmem            : > RAML0        PAGE = 1
    .ebss               : >> RAML0|RAMH0 PAGE = 1
 
-   .econst             : > APP_SPACE    PAGE = 0 
-   .switch             : > APP_SPACE    PAGE = 0
+   .econst             : > BOOT_SPACE    PAGE = 0 
+   .switch             : > BOOT_SPACE    PAGE = 0
 
    csmpasswds          : > CSM_PWL      PAGE = 0
    csm_rsvd            : > CSM_RSVD     PAGE = 0
@@ -52,4 +52,3 @@ SECTIONS
    .reset              : > RESET        PAGE = 0, TYPE = DSECT
    vectors             : > VECTORS      PAGE = 0, TYPE = DSECT
 }
-

@@ -18,7 +18,6 @@
 #include "SPIcomm.h"
 #include "PreDriver.h"
 #include "Parameter.h"
-#include "canfd.h"
 
 #define Device_cal (void   (*)(void))0x3D7C80
 
@@ -82,20 +81,20 @@ void InitSysCtrl()
 ************************************************************/
 void InitInterrupt()
 {
-   DINT;							//Clear all interrupts and initialize PIE vector table:
-   InitPieCtrl();  					//Disable PIE
-   IER = 0x0000;
-   IFR = 0x0000;
-
-   InitPieVectTable();				//Enable PIE
-
-   EALLOW;  						//设置用户服务程序
-
-   PieVectTable.EPWM2_TZINT = &OneShotTZOfEPWMISR;	//过流中断
-   PieVectTable.EPWM2_INT 	= &ZeroOfEPWMISR;		//下溢中断
-   PieVectTable.CANFD_INT1  = &canfd_IsrHander1;    //canfd总中断
-
-   EDIS;
+//   DINT;							//Clear all interrupts and initialize PIE vector table:
+//   InitPieCtrl();  					//Disable PIE
+//   IER = 0x0000;
+//   IFR = 0x0000;
+//
+//   InitPieVectTable();				//Enable PIE
+//
+//   EALLOW;  						//设置用户服务程序
+//
+//   PieVectTable.EPWM2_TZINT = &OneShotTZOfEPWMISR;	//过流中断
+//   PieVectTable.EPWM2_INT 	= &ZeroOfEPWMISR;		//下溢中断
+//   PieVectTable.CANFD_INT1  = &canfd_IsrHander1;    //canfd总中断
+//
+//   EDIS;
 }
 
 /************************************************************

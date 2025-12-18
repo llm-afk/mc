@@ -3,7 +3,6 @@
 #include "MotorInclude.h"
 #include "Record.h"
 #include "AngleSensor.h"
-#include "encoder.h"
 
 #define CS_MAIN_EN()      (GpioDataRegs.GPACLEAR.bit.GPIO19 = 1)
 #define CS_MAIN_DIS()     (GpioDataRegs.GPASET.bit.GPIO19 = 1)

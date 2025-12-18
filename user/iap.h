@@ -2,13 +2,15 @@
 #define IAP_H
 
 #include "MainInclude.h"
-#include "flash_eeprom.h"
+#include "Flash_ADP32F03x_API_Library.h"
+#include "Flash_ADP32F03x_API_Config.h"
 #include "mm.h"
 
-#define APP
-//#define BOOTLOADER
 
-#define IAP_FLAG_ADDR 0x00BFFF
+//#define APP
+#define BOOTLOADER
+
+#define IAP_FLAG_ADDR 0x00BFFF // SRAM的最后一个地址
 #define IAP_FLAG_NUM  0xA5A5
 
 #define SET_IAP_FLAG(x)  (*(volatile uint16_t *)IAP_FLAG_ADDR = (uint16_t)(x))

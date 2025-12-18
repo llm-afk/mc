@@ -9,7 +9,6 @@
 #include "Reference.h"
 #include "PreDriver.h"
 #include "AngleSensor.h"
-#include "encoder.h"
 
 void ParameterChange(void);	
 void CalCarrierWaveFreq(void);
@@ -1715,7 +1714,7 @@ void calc_out_angle2()
     }
     else
     {
-        data1 = encoder.elec_degree;//±àÂëÆ÷½Ç¶È + 110 * 65535 / 360£¡£¡£¡
+        //data1 = encoder.elec_degree;//±àÂëÆ÷½Ç¶È + 110 * 65535 / 360£¡£¡£¡
     }
 
     data = data1 + pm_dq_angle;
