@@ -36,7 +36,7 @@ main_init:
 	|| MOV	*XAR5++,	ACC
 	
 	MOVL 	XAR5,	#8000H		
-	MOVL 	XAR4,	#(2FFFH-1)  ;except the last address
+	MOVL 	XAR4,	#(3FFFH-1)  ;except the last address
 	RPT		@AR4
 	|| MOV	*XAR5++,	ACC
 
