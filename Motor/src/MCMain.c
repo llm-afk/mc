@@ -1736,9 +1736,9 @@ void calc_out_angle2()
 Median7Filter_t mf7_M = {0};
 Median7Filter_t mf7_T = {0};
 
-uint16_t d_kp = 390;
+uint16_t d_kp = 420;
 uint16_t d_ki = 250;
-uint16_t q_kp = 390;
+uint16_t q_kp = 420;
 uint16_t q_ki = 250;
 
 #pragma CODE_SECTION(MotorControlISR, "ramfuncs");

@@ -46,7 +46,7 @@ static void dictionary_init(void)
 
     ODObjs.in_encoder_offset = 0;
     ODObjs.ex_encoder_offset = 0;
-    ODObjs.firmware_version = 115; 
+    ODObjs.firmware_version = 116; 
 }
 
 /**
