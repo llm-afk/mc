@@ -122,7 +122,23 @@ void encoder_loop(void)
     }
     
     int16_t delta = (int16_t)(lined_deg - degree_last);
-    
+
+    // --- 【核心修复1】：拦截并过滤物理不可能的角度跳变（SPI 毛刺） ---
+    // 如果跳变超过 100（约等效 100r/s 的物理极限），且没有发生真实的过零跳变，
+    // 则认为这是一次 SPI 通信错误，强制将 lined_deg 修正为连续值。
+    if(delta > 100 && delta < (ENCODER_CPR - 100)) 
+    {
+        delta = 100;
+        lined_deg = (degree_last + delta) & (ENCODER_CPR - 1);
+    }
+    else if(delta < -100 && delta > -(ENCODER_CPR - 100)) 
+    {
+        delta = -100;
+        lined_deg = (degree_last + delta) & (ENCODER_CPR - 1);
+    }
+
+    // --- 【核心修复2】：在滤除毛刺后，安全地处理过零点和圈数累计 ---
+    // enc_turns 现在受到毛刺过滤器的保护，不会因为 SPI 错误而莫名其妙多/少一圈
     if(delta > ENCODER_CPR_DIV) 
     {
         encoder.enc_turns--;
@@ -133,6 +149,9 @@ void encoder_loop(void)
         encoder.enc_turns++;
         delta += ENCODER_CPR; 
     }
+
+    // 更新受保护的数据：确保电角度计算和下一拍位置参考是平滑的
+    encoder.enc_degree_lined = lined_deg;
     degree_last = lined_deg;
 
     // 速度计算
@@ -181,7 +200,9 @@ void encoder_loop(void)
             vel_alpha_q8 += alpha_diff >> 3; 
         }
 
-        velocity_temp_q14 += (error * vel_alpha_q8) >> 8;
+        // --- 【核心修复3】：使用 int64_t 强制转换，防止 (error * vel_alpha_q8) 结果溢出 32 位范围 ---
+        // 这是解决静止时由于 SPI 毛刺误触发 160 rad/s 恒定异常速度的数学根本原因
+        velocity_temp_q14 += (int32_t)(((int64_t)error * vel_alpha_q8) >> 8);
         encoder.enc_velocity_q14 = -velocity_temp_q14;
     }
     
