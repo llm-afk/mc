@@ -27,6 +27,7 @@ typedef struct {
     uint16_t in_encoder_offset;
     uint16_t ex_encoder_offset;
     uint16_t firmware_version;
+    uint16_t hardware_version;
 }ODObjs_t;
 
 extern ODObjs_t ODObjs;

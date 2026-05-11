@@ -28,6 +28,7 @@ static const OD_entry_t ODList[] =
     {0x2070, &ODObjs.in_encoder_offset,         2, ATTR_ROM | ATTR_RW, enc_set_zero}, // 标零只需要写入一次0x2070即可
     {0x2071, &ODObjs.ex_encoder_offset,         2, ATTR_ROM | ATTR_RW, NULL}, 
     {0x2100, &ODObjs.firmware_version,          2, ATTR_RAM | ATTR_R,  NULL},
+    {0x2103, &ODObjs.hardware_version,          2, ATTR_RAM | ATTR_R,  NULL},
 };
 
 static void dictionary_init(void)
@@ -47,6 +48,7 @@ static void dictionary_init(void)
     ODObjs.in_encoder_offset = 0;
     ODObjs.ex_encoder_offset = 0;
     ODObjs.firmware_version = 117; 
+    ODObjs.hardware_version = 101;
 }
 
 /**
