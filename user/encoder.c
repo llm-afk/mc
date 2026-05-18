@@ -412,7 +412,9 @@ uint16_t encoder_calibrate(void)
 
             state = 0;
             cnt = 0;
+            ODObjs.is_calibrated = 1;
             load_ram_item_to_eeprom_from_key(1); 
+            load_ram_item_to_eeprom_from_key(9);
             return 1; 
         }
         default: break;

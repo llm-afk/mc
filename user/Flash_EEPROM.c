@@ -17,6 +17,7 @@ eeprom_item_t eeprom_item_list[] = {
     {6, sizeof(ODObjs.over_temp_motor_level),   &ODObjs.over_temp_motor_level},
     {7, sizeof(ODObjs.heartbeat_Producer_enable),&ODObjs.heartbeat_Producer_enable},
     {8, sizeof(ODObjs.heartbeat_consumer_enable),&ODObjs.heartbeat_consumer_enable},
+    {9, sizeof(ODObjs.is_calibrated),           &ODObjs.is_calibrated},
 };
 
 /**

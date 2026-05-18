@@ -21,6 +21,7 @@ const lpg_seg_t led_err_drv_over_temp[]    = {{4,1},{5,0},{4,1},{5,0},{30,0},{4,
 const lpg_seg_t led_err_motor_over_temp[]  = {{4,1},{5,0},{4,1},{5,0},{30,0},{4,1},{5,0},{4,1},{5,0},{120,0}};
 const lpg_seg_t led_err_can_bus_off[]      = {{4,1},{5,0},{4,1},{5,0},{4,1},{5,0},{120,0}};
 const lpg_seg_t led_err_under_voltage[]    = {{4,1},{5,0},{4,1},{5,0},{4,1},{5,0},{30,0},{4,1},{5,0},{120,0}};
+const lpg_seg_t led_err_uncalibrated[]     = {{5,1},{5,0}};
 
 typedef enum{
     LED_OFF,
@@ -31,6 +32,7 @@ typedef enum{
     LED_ERR_MOTOR_OVER_TEMP,    // 电机过温                          
     LED_ERR_UNDER_VOLTAGE,      // 欠压    
     LED_ERR_CAN_BUS_OFF,        // 关节自身CANFD外设Bus-Off,主动挂出总线   
+    LED_ERR_UNCALIBRATED,       // 未校准
 }led_state_t;
 
 led_state_t led_state = LED_OFF;
@@ -71,7 +73,15 @@ void led_loop(void)
     static uint16_t cnt = 0;
     static uint16_t RunSignal_last = 0;
 
-    if(cnt <= 1000)
+    if(ODObjs.is_calibrated == 0)
+    {
+        led_state = LED_ERR_UNCALIBRATED;
+        if(led_state != led_state_last)
+        {
+            lpg_set_pattern(&lpg.units[0], led_err_uncalibrated, ARRAY_SIZE(led_err_uncalibrated));
+        }
+    }
+    else if(cnt <= 1000)
     {
         cnt++;
         led_state = LED_ID_BLINK;

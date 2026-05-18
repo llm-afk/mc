@@ -17,8 +17,8 @@ typedef struct {
 
     uint16_t node_id;         
 
-    uint16_t heartbeat_Producer_enable; // æ˜¯å¦å¼€å¯é©±åŠ¨å™¨çš„å¿ƒè·³ä¸ŠæŠ¥åŠŸèƒ½ï¼Œå¼€å¯åé©±åŠ¨å™¨ä¼šæ¯ç§’å‘é€ä¸€æ¬¡å¿ƒè·³å¸§
-    uint16_t heartbeat_consumer_enable; // æ˜¯å¦å¼€å¯é©±åŠ¨å™¨çš„å¿ƒè·³ç›‘æµ‹åŠŸèƒ½ï¼Œå¼€å¯åé©±åŠ¨å™¨ä¼šç›‘æµ‹æ˜¯å¦æœ‰å¿ƒè·³å¸§æ•°æ®ï¼Œå¦‚æœè¶…è¿‡ä¸€å®šæ—¶é—´æ²¡æœ‰æ”¶åˆ°å¿ƒè·³å¸§æ•°æ®åˆ™è®¤ä¸ºé€šä¿¡æ–­å¼€äº†ï¼Œä¼šåˆ‡æ–­è¾“å‡ºï¼Œéœ€è¦æ–­ç”µé‡å¯æ‰èƒ½æ¢å¤
+    uint16_t heartbeat_Producer_enable; // ÊÇ·ñ¿ªÆôÇı¶¯Æ÷µÄĞÄÌøÉÏ±¨¹¦ÄÜ£¬¿ªÆôºóÇı¶¯Æ÷»áÃ¿Ãë·¢ËÍÒ»´ÎĞÄÌøÖ¡
+    uint16_t heartbeat_consumer_enable; // ÊÇ·ñ¿ªÆôÇı¶¯Æ÷µÄĞÄÌø¼à²â¹¦ÄÜ£¬¿ªÆôºóÇı¶¯Æ÷»á¼à²âÊÇ·ñÓĞĞÄÌøÖ¡Êı¾İ£¬Èç¹û³¬¹ıÒ»¶¨Ê±¼äÃ»ÓĞÊÕµ½ĞÄÌøÖ¡Êı¾İÔòÈÏÎªÍ¨ĞÅ¶Ï¿ªÁË£¬»áÇĞ¶ÏÊä³ö£¬ĞèÒª¶ÏµçÖØÆô²ÅÄÜ»Ö¸´
 
     float    torque_limit;
     float    over_temp_drv_level;
@@ -26,6 +26,7 @@ typedef struct {
     
     uint16_t in_encoder_offset;
     uint16_t ex_encoder_offset;
+    uint16_t is_calibrated;
     uint16_t firmware_version;
     uint16_t hardware_version;
 }ODObjs_t;
