@@ -157,10 +157,14 @@ void MC_servo_loop(void)
         }
         case ENCODER_CALIBRATE: 
         {
+            if(RunSignal == 0)
+            {
+                RunSignal = 1;
+            }
             if(encoder_calibrate() == 1)
             {
+                RunSignal = 0;
                 motor_ctrl.state = MIT;
-                ResetDSP();
             }
             break;
         }
