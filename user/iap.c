@@ -94,7 +94,6 @@ uint16_t flash_program(uint16_t *flashAddr, uint16_t *dataBuf, uint16_t length)
 }
 
 uint16_t page_temp[8192] = {0};
-
 void bootloader(void)
 { 
     if(GET_IAP_FLAG() == IAP_FLAG_NUM)
@@ -104,18 +103,19 @@ void bootloader(void)
         flash_erase_sector(SECTORH);
 
         memcpy(page_temp, (uint16_t*)0x3F0000, 8192);
-        flash_program((uint16_t *)APP_ADDR, page_temp, 8192); 
+        flash_program((uint16_t *)APP_ADDR, page_temp, 8192);
 
         memcpy(page_temp, (uint16_t*)0x3F2000, 8192);
-        flash_program((uint16_t *)(APP_ADDR + 0x2000), page_temp, 8192); 
+        flash_program((uint16_t *)(APP_ADDR + 0x2000), page_temp, 8192);
 
         memcpy(page_temp, (uint16_t*)0x3F4000, 8192);
-        flash_program((uint16_t *)(APP_ADDR + 0x4000), page_temp, 8192); 
+        flash_program((uint16_t *)(APP_ADDR + 0x4000), page_temp, 8192);
 
         // 清空更新标志位
         SET_IAP_FLAG(0);
     }
 
+    asm(" RPT #1000 || NOP");
     ((void (*)(void))0x3E8000)(); // 跳转app
 }
 

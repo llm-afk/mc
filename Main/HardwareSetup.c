@@ -307,7 +307,7 @@ void InitPll(Uint16 val)
 
         EALLOW;
 #ifndef INTER_OSC
-        SysCtrlRegs.PLLSTS.bit.DIVSEL = 2;      // configure PLLSTS.DIVSEL = 2  (default)
+        SysCtrlRegs.PLLSTS.bit.DIVSEL = 3;      // configure PLLSTS.DIVSEL = 2  (default)
 #else
         SysCtrlRegs.PLLSTS.bit.DIVSEL = 3;      // configure PLLSTS.DIVSEL = 2  (default)
 #endif
