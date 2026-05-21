@@ -25,7 +25,7 @@ static const OD_entry_t ODList[] =
     {0x2060, &ODObjs.over_temp_drv_level,       4, ATTR_ROM | ATTR_RW, NULL},
     {0x2061, &ODObjs.over_temp_motor_level,     4, ATTR_ROM | ATTR_RW, NULL},
 
-    {0x2070, &ODObjs.in_encoder_offset,         2, ATTR_ROM | ATTR_RW, enc_set_zero}, // ±êÁãÖ»ĞèÒªĞ´ÈëÒ»´Î0x2070¼´¿É
+    {0x2070, &ODObjs.in_encoder_offset,         2, ATTR_ROM | ATTR_RW, enc_set_zero}, // æ ‡é›¶åªéœ€è¦å†™å…¥ä¸€æ¬¡0x2070å³å¯
     {0x2071, &ODObjs.ex_encoder_offset,         2, ATTR_ROM | ATTR_RW, NULL}, 
     {0x2072, &ODObjs.is_calibrated,             2, ATTR_ROM | ATTR_RW, NULL},
     {0x2100, &ODObjs.firmware_version,          2, ATTR_RAM | ATTR_R,  NULL},
@@ -40,8 +40,8 @@ static void dictionary_init(void)
     ODObjs.node_id = 1;
     ODObjs.is_calibrated = 0;
 
-    ODObjs.heartbeat_Producer_enable = 0; // Ä¬ÈÏ¹Ø±ÕĞÄÌøÉÏ±¨¹¦ÄÜ
-    ODObjs.heartbeat_consumer_enable = 1; // Ä¬ÈÏ¿ªÆôĞÄÌø¼à²â¹¦ÄÜ
+    ODObjs.heartbeat_Producer_enable = 0; // é»˜è®¤å…³é—­å¿ƒè·³ä¸ŠæŠ¥åŠŸèƒ½
+    ODObjs.heartbeat_consumer_enable = 1; // é»˜è®¤å¼€å¯å¿ƒè·³ç›‘æµ‹åŠŸèƒ½
 
     ODObjs.torque_limit = 30.0f;
     ODObjs.over_temp_drv_level = 85.0f;
@@ -49,15 +49,15 @@ static void dictionary_init(void)
 
     ODObjs.in_encoder_offset = 0;
     ODObjs.ex_encoder_offset = 0;
-    ODObjs.firmware_version = 120; 
+    ODObjs.firmware_version = SOFT_VERSION; 
     ODObjs.hardware_version = 101;
 }
 
 /**
- * @brief ¼æÈİÎÒĞ´µÄeeprom¿âµÄÒ»¸ö²¹¶¡°ÉËãÊÇ
- * @param idx od objË÷Òı
- * @return eeprom¿âkeyË÷Òı
- * @note ËùÓĞ×¢²áÔÚod×Öµä¶ÔÏóÖĞµÄÓĞromÊôĞÔµÄ±äÁ¿¶¼ĞèÒªÔÚÕâÀï¶à×¢²áÒ»±é
+ * @brief å…¼å®¹æˆ‘å†™çš„eepromåº“çš„ä¸€ä¸ªè¡¥ä¸å§ç®—æ˜¯
+ * @param idx od objç´¢å¼•
+ * @return eepromåº“keyç´¢å¼•
+ * @note æ‰€æœ‰æ³¨å†Œåœ¨odå­—å…¸å¯¹è±¡ä¸­çš„æœ‰romå±æ€§çš„å˜é‡éƒ½éœ€è¦åœ¨è¿™é‡Œå¤šæ³¨å†Œä¸€é
  */
 static uint16_t get_eeprom_key_from_index(uint16_t idx)
 {
@@ -71,7 +71,7 @@ static uint16_t get_eeprom_key_from_index(uint16_t idx)
         case 0x2061: return 6;   // over_temp_motor_level
         case 0x2043: return 7;   // heartbeat_Producer_enable
         case 0x2044: return 8;   // heartbeat_consumer_enable
-        default: return 0xFF;    // ÎŞĞ§Ë÷Òı£¬·µ»Ø´íÎó±êÊ¶
+        default: return 0xFF;    // æ— æ•ˆç´¢å¼•ï¼Œè¿”å›é”™è¯¯æ ‡è¯†
     }
 }
 
