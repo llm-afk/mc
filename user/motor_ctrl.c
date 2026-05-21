@@ -231,6 +231,9 @@ float under_v_level = 20.0f;
 #define INV_BETA    0.0002902758f  // 1.0f / 3445.0f
 
 extern uint16_t heatbeat_flag;
+extern float torque;
+
+float i2t_acc = 0.0f;
 
 /**
  * @brief 采集电机控制相关数据
@@ -310,6 +313,44 @@ void info_collect_loop(void)
             EnableDrive();
             motor_ctrl.state = INIT;
         }
+    }
+/* -------- I?t 算法高级热保护（堵转保护） -------- */
+    // 效果：满量程(30.0N) 持续 5s 判定过流。
+    // 设定 28.0N 为发热死区(连续容忍电流)。只要低于 28N 积分就不会累积。
+    // static float i2t_acc = 0.0f; // 注意：此变量需在函数外或作为静态变量定义
+    
+    const float dt = 0.01f; // 100Hz 循环时间
+    
+    // 1. 基准测试点直接锚定 30.0N (不再打 95% 折扣)
+    const float t_trip_test = 30.0f; 
+    
+    // 2. 持续容忍死区拉高到 28.0N
+    const float t_rated = 28.0f;  
+    
+    // 3. 测试点容忍时间
+    const float t_trip_time = 5.0f; 
+    
+    // 4. 自动计算积分阈值
+    // 数学过程: (30^2 - 28^2) * 5.0 = (900 - 784) * 5.0 = 116 * 5.0 = 580.0
+    const float i2t_threshold = (t_trip_test * t_trip_test - t_rated * t_rated) * t_trip_time;
+
+    float current_sq = torque * torque;
+    float rated_sq = t_rated * t_rated;
+
+    // 核心累加器：发热减去基础散热
+    i2t_acc += (current_sq - rated_sq) * dt;
+
+    // 冷却下限拦截
+    if(i2t_acc < 0.0f) 
+    {
+        i2t_acc = 0.0f; // 完全冷却，积分清零
+    }
+    
+    // 触发保护判断
+    if(!(ODObjs.error_code & ERR_OVER_CURRENT_SOFT) && (i2t_acc > i2t_threshold))
+    {
+        set_err(ERR_OVER_CURRENT_SOFT); // 触发 I?t 热过载（过流堵转）保护
+        motor_ctrl.state = SOFT_STOP;
     }
 
     /* -------- CAN 状态机检测 -------- */

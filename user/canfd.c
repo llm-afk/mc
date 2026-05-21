@@ -200,6 +200,8 @@ interrupt void canfd_IsrHander1(void)
     PieCtrlRegs.PIEACK.all = PIEACK_GROUP4;
 }
 
+float torque = 0;
+
 /**
  * @brief CAN 数据帧解析函数
  * @param frame 待解析的 CAN 数据帧
@@ -260,9 +262,10 @@ static void parse_frame(canFrame_t *frame)
                 frame->len = 20;     
                 *(uint16_t*)&frame->data[8] = ODObjs.error_code;
             }
+            torque = Iq_To_Torque(imt_current_to_float(gIMT.M, gIMT.T, MOTOR_RATED_CUR));
             *(float*)&frame->data[0] = (float)encoder.degree_q14 / 16384.0f; // 减速端位置反馈(rad)
             *(float*)&frame->data[2] = (float)encoder.velocity_q14 / 16384.0f; // 减速端速度反馈(rad/s)
-            *(float*)&frame->data[4] = Iq_To_Torque(imt_current_to_float(gIMT.M, gIMT.T, MOTOR_RATED_CUR)); // 性能优化版本，减少50us计算时间
+            *(float*)&frame->data[4] = torque; // 性能优化版本，减少50us计算时间
             frame->data[6] = (int16_t)(motor_temp * 10.0f); // 电机温度 (0.1°)
             frame->data[7] = (int16_t)(board_temp * 10.0f); // 驱动器温度 (0.1°) 
             enqueue_tx_frame(frame);
