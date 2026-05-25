@@ -71,77 +71,26 @@ void led_init(void)
 void led_loop(void)
 {
     static uint16_t cnt = 0;
+    static uint16_t cnt2 = 0;
     static uint16_t RunSignal_last = 0;
 
-    if(ODObjs.is_calibrated == 0)
+    if(cnt2 < 50)
     {
-        led_state = LED_ERR_UNCALIBRATED;
-        if(led_state != led_state_last)
-        {
-            lpg_set_pattern(&lpg.units[0], led_err_uncalibrated, ARRAY_SIZE(led_err_uncalibrated));
-        }
-    }
-    else if(cnt <= 1000)
-    {
-        cnt++;
-        led_state = LED_ID_BLINK;
-        if((led_state != led_state_last) || (RunSignal != RunSignal_last))
-        {
-            switch(ODObjs.node_id)
-            {
-                case 1: RunSignal ? lpg_set_pattern(&lpg.units[0], led_id_1_en, ARRAY_SIZE(led_id_1_en)) : lpg_set_pattern(&lpg.units[0], led_id_1_dis, ARRAY_SIZE(led_id_1_dis)); break;
-                case 2: RunSignal ? lpg_set_pattern(&lpg.units[0], led_id_2_en, ARRAY_SIZE(led_id_2_en)) : lpg_set_pattern(&lpg.units[0], led_id_2_dis, ARRAY_SIZE(led_id_2_dis)); break;
-                case 3: RunSignal ? lpg_set_pattern(&lpg.units[0], led_id_3_en, ARRAY_SIZE(led_id_3_en)) : lpg_set_pattern(&lpg.units[0], led_id_3_dis, ARRAY_SIZE(led_id_3_dis)); break;
-                case 4: RunSignal ? lpg_set_pattern(&lpg.units[0], led_id_4_en, ARRAY_SIZE(led_id_4_en)) : lpg_set_pattern(&lpg.units[0], led_id_4_dis, ARRAY_SIZE(led_id_4_dis)); break;
-                default:break;;
-            }
-        }
+        cnt2++;
     }
     else
     {
-        // 错误优先级 断线 > 驱动器过温 > 电机过温 > 欠压 > can_bus_off
-        if(canfd_frame_flag)
+        if(ODObjs.is_calibrated == 0)
         {
-            led_state = LED_ERR_CAN_PHY_OFF;
+            led_state = LED_ERR_UNCALIBRATED;
             if(led_state != led_state_last)
             {
-                lpg_set_pattern(&lpg.units[0], led_err_can_phy_off, ARRAY_SIZE(led_err_can_phy_off));
+                lpg_set_pattern(&lpg.units[0], led_err_uncalibrated, ARRAY_SIZE(led_err_uncalibrated));
             }
         }
-        else if(ODObjs.error_code & ERR_OVER_TEMP_DRV)
+        else if(cnt <= 1000)
         {
-            led_state = LED_ERR_DRV_OVER_TEMP;
-            if(led_state != led_state_last)
-            {
-                lpg_set_pattern(&lpg.units[0], led_err_drv_over_temp, ARRAY_SIZE(led_err_drv_over_temp));
-            }
-        }
-        else if(ODObjs.error_code & ERR_OVER_TEMP_MOTOR)
-        {
-            led_state = LED_ERR_MOTOR_OVER_TEMP;
-            if(led_state != led_state_last)
-            {
-                lpg_set_pattern(&lpg.units[0], led_err_motor_over_temp, ARRAY_SIZE(led_err_motor_over_temp));
-            }
-        }
-        else if(ODObjs.error_code & ERR_UNDER_VOLTAGE)
-        {
-            led_state = LED_ERR_UNDER_VOLTAGE;
-            if(led_state != led_state_last)
-            {
-                lpg_set_pattern(&lpg.units[0], led_err_under_voltage, ARRAY_SIZE(led_err_under_voltage));
-            }
-        }
-        else if(canfd_buf_off_flag)
-        {
-            led_state = LED_ERR_CAN_BUS_OFF;
-            if(led_state != led_state_last)
-            {
-                lpg_set_pattern(&lpg.units[0], led_err_can_bus_off, ARRAY_SIZE(led_err_can_bus_off));
-            }
-        }
-        else
-        {
+            cnt++;
             led_state = LED_ID_BLINK;
             if((led_state != led_state_last) || (RunSignal != RunSignal_last))
             {
@@ -155,9 +104,68 @@ void led_loop(void)
                 }
             }
         }
+        else
+        {
+            // 错误优先级 断线 > 驱动器过温 > 电机过温 > 欠压 > can_bus_off
+            if(canfd_frame_flag)
+            {
+                led_state = LED_ERR_CAN_PHY_OFF;
+                if(led_state != led_state_last)
+                {
+                    lpg_set_pattern(&lpg.units[0], led_err_can_phy_off, ARRAY_SIZE(led_err_can_phy_off));
+                }
+            }
+            else if(ODObjs.error_code & ERR_OVER_TEMP_DRV)
+            {
+                led_state = LED_ERR_DRV_OVER_TEMP;
+                if(led_state != led_state_last)
+                {
+                    lpg_set_pattern(&lpg.units[0], led_err_drv_over_temp, ARRAY_SIZE(led_err_drv_over_temp));
+                }
+            }
+            else if(ODObjs.error_code & ERR_OVER_TEMP_MOTOR)
+            {
+                led_state = LED_ERR_MOTOR_OVER_TEMP;
+                if(led_state != led_state_last)
+                {
+                    lpg_set_pattern(&lpg.units[0], led_err_motor_over_temp, ARRAY_SIZE(led_err_motor_over_temp));
+                }
+            }
+            else if(ODObjs.error_code & ERR_UNDER_VOLTAGE)
+            {
+                led_state = LED_ERR_UNDER_VOLTAGE;
+                if(led_state != led_state_last)
+                {
+                    lpg_set_pattern(&lpg.units[0], led_err_under_voltage, ARRAY_SIZE(led_err_under_voltage));
+                }
+            }
+            else if(canfd_buf_off_flag)
+            {
+                led_state = LED_ERR_CAN_BUS_OFF;
+                if(led_state != led_state_last)
+                {
+                    lpg_set_pattern(&lpg.units[0], led_err_can_bus_off, ARRAY_SIZE(led_err_can_bus_off));
+                }
+            }
+            else
+            {
+                led_state = LED_ID_BLINK;
+                if((led_state != led_state_last) || (RunSignal != RunSignal_last))
+                {
+                    switch(ODObjs.node_id)
+                    {
+                        case 1: RunSignal ? lpg_set_pattern(&lpg.units[0], led_id_1_en, ARRAY_SIZE(led_id_1_en)) : lpg_set_pattern(&lpg.units[0], led_id_1_dis, ARRAY_SIZE(led_id_1_dis)); break;
+                        case 2: RunSignal ? lpg_set_pattern(&lpg.units[0], led_id_2_en, ARRAY_SIZE(led_id_2_en)) : lpg_set_pattern(&lpg.units[0], led_id_2_dis, ARRAY_SIZE(led_id_2_dis)); break;
+                        case 3: RunSignal ? lpg_set_pattern(&lpg.units[0], led_id_3_en, ARRAY_SIZE(led_id_3_en)) : lpg_set_pattern(&lpg.units[0], led_id_3_dis, ARRAY_SIZE(led_id_3_dis)); break;
+                        case 4: RunSignal ? lpg_set_pattern(&lpg.units[0], led_id_4_en, ARRAY_SIZE(led_id_4_en)) : lpg_set_pattern(&lpg.units[0], led_id_4_dis, ARRAY_SIZE(led_id_4_dis)); break;
+                        default:break;;
+                    }
+                }
+            }
+        }
+        led_state_last = led_state;
+        RunSignal_last = RunSignal;
+        lpg_loop();
     }
-    led_state_last = led_state;
-    RunSignal_last = RunSignal;
-    lpg_loop();
 }
 

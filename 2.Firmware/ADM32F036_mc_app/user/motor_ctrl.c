@@ -10,7 +10,7 @@ int MC_controlword_update(void)
 {
     switch(ODObjs.control_word & 0x00FF)
     {
-        case CW_CMD_OPERATION_ENABLE: // Ê¹ÄÜµç»ú
+        case CW_CMD_OPERATION_ENABLE: // ä½¿èƒ½ç”µæœº
         {
             if(RunSignal == 0)
             {
@@ -18,7 +18,7 @@ int MC_controlword_update(void)
             }
             break;
         }
-        case CW_CMD_OPERATION_DISABLE: // Ê§ÄÜµç»ú
+        case CW_CMD_OPERATION_DISABLE: // å¤±èƒ½ç”µæœº
         {
             if(RunSignal == 1)
             {
@@ -26,17 +26,17 @@ int MC_controlword_update(void)
             }
             break;
         }
-        case CW_CMD_RESET_HOME: // ¸´Î»Ô­µã
+        case CW_CMD_RESET_HOME: // å¤ä½åŸç‚¹
         {
 
             break;
         }
-        case CW_CMD_ERROR_RESET: // ´íÎóÇå³ı
+        case CW_CMD_ERROR_RESET: // é”™è¯¯æ¸…é™¤
         {
             ODObjs.error_code = 0;
             break;
         }
-        case CW_CMD_DEV_ENCODER_CALIB: // ±àÂëÆ÷Ğ£×¼
+        case CW_CMD_DEV_ENCODER_CALIB: // ç¼–ç å™¨æ ¡å‡†
         {
             motor_ctrl.state = ENCODER_CALIBRATE;
             break;
@@ -50,46 +50,46 @@ int MC_controlword_update(void)
     return 0;
 }
 /**
- * @brief µç»ú×´Ì¬¿ØÖÆÖ÷Ñ­»·
- * @note ·ÅÔÚstimer¿ò¼ÜÏÂ2KhzÑ­»·Ö´ĞĞ
+ * @brief ç”µæœºçŠ¶æ€æ§åˆ¶ä¸»å¾ªç¯
+ * @note æ”¾åœ¨stimeræ¡†æ¶ä¸‹2Khzå¾ªç¯æ‰§è¡Œ
  */
 #pragma CODE_SECTION(MC_servo_loop, "ramfuncs");
 void MC_servo_loop(void)
 {
     // =========================================================================
-    // ¡¾ÖÕ¼«·ÀÒç³ö & Áã¾«¶ÈËğÊ§¼ÆËã·¨¡¿
-    // 1. »ñÈ¡´¿¾»µÄ×Ü Tick Êı (64Î»)£¬ÓÀ²»Òç³ö
-    // ¼´Ê¹µç»úÒÔ 3000 RPM ÔË×ª£¬int64_t ×ãÒÔÈÃËüÁ¬Ğøµ¥ÏòÔËĞĞ³¬ 100 ÍòÈ¦²»Òç³ö¡£
+    // ã€ç»ˆæé˜²æº¢å‡º & é›¶ç²¾åº¦æŸå¤±è®¡ç®—æ³•ã€‘
+    // 1. è·å–çº¯å‡€çš„æ€» Tick æ•° (64ä½)ï¼Œæ°¸ä¸æº¢å‡º
+    // å³ä½¿ç”µæœºä»¥ 3000 RPM è¿è½¬ï¼Œint64_t è¶³ä»¥è®©å®ƒè¿ç»­å•å‘è¿è¡Œè¶… 100 ä¸‡åœˆä¸æº¢å‡ºã€‚
     // =========================================================================
-    int64_t total_ticks = ((int64_t)encoder.enc_turns << 14)  // µÈĞ§ÓÚ * 16384
+    int64_t total_ticks = ((int64_t)encoder.enc_turns << 14)  // ç­‰æ•ˆäº * 16384
                         + (int32_t)((int16_t)encoder.enc_degree_lined + (int16_t)encoder.in_enc_deg_zero)
                         - (int32_t)encoder.error * 18;
 
     // =========================================================================
-    // 2. ½«¸¡µã³Ë³ı×ª»»Îª Q30 ¸ñÊ½µÄ 64Î»¶¨µã³Ë·¨ (³¹µ×ÏûÃğ¸¡µãÊıµ¼ÖÂµÄ¾«¶È³Ô¹âÏÖÏó)
-    // Ô­¹«Ê½ÍÆµ¼£º(total_ticks / 16384) / 12 * TWO_PI * 16384 => total_ticks * (TWO_PI / 12)
-    // TWO_PI / 12.0 = 0.523598775598£¬³ËÒÔ 2^30 ×ªÎª Q30 ¶¨µã³£Êı£º562203932LL
+    // 2. å°†æµ®ç‚¹ä¹˜é™¤è½¬æ¢ä¸º Q30 æ ¼å¼çš„ 64ä½å®šç‚¹ä¹˜æ³• (å½»åº•æ¶ˆç­æµ®ç‚¹æ•°å¯¼è‡´çš„ç²¾åº¦åƒå…‰ç°è±¡)
+    // åŸå…¬å¼æ¨å¯¼ï¼š(total_ticks / 16384) / 12 * TWO_PI * 16384 => total_ticks * (TWO_PI / 12)
+    // TWO_PI / 12.0 = 0.523598775598ï¼Œä¹˜ä»¥ 2^30 è½¬ä¸º Q30 å®šç‚¹å¸¸æ•°ï¼š562203932LL
     // =========================================================================
     encoder.degree_q14 = (-(total_ticks * 562203932LL) >> 30) + 8565;
     
-    // ¼ÙÉè GEAR_RATIO_INV ÊÇ³£Á¿ºê£¬´Ë´¦±£ÁôÔ­Òâ
+    // å‡è®¾ GEAR_RATIO_INV æ˜¯å¸¸é‡å®ï¼Œæ­¤å¤„ä¿ç•™åŸæ„
     encoder.velocity_q14 = (int32_t)(encoder.enc_velocity_q14 * GEAR_RATIO_INV);
 
     // =========================================================================
-    // ¡¾ÓÅ»¯ 2¡¿ÓÅ»¯ 64 Î»Êı¾İµÄ¾ø¶ÔÖµ¼ÆËãÓëÍ»±äÂË²¨
+    // ã€ä¼˜åŒ– 2ã€‘ä¼˜åŒ– 64 ä½æ•°æ®çš„ç»å¯¹å€¼è®¡ç®—ä¸çªå˜æ»¤æ³¢
     // =========================================================================
     static int64_t degree_q14_last = 0;
     static int16_t first_flag = 0;
     
     if(!first_flag) 
     {
-        first_flag = 1; // Ìæ»»×ÔÔö£¬·ÀÖ¹¶àÄêÔËĞĞºóÒç³ö
+        first_flag = 1; // æ›¿æ¢è‡ªå¢ï¼Œé˜²æ­¢å¤šå¹´è¿è¡Œåæº¢å‡º
     }
     else
     {
-        // ´¿ÕûÊı¼õ·¨ºÍÂß¼­ÅĞ¶Ï£¬±Ü¿ªµ÷ÓÃ 64 Î»¿íµÄ INT_ABS ¿âº¯Êı¿ªÏú
+        // çº¯æ•´æ•°å‡æ³•å’Œé€»è¾‘åˆ¤æ–­ï¼Œé¿å¼€è°ƒç”¨ 64 ä½å®½çš„ INT_ABS åº“å‡½æ•°å¼€é”€
         int64_t diff = encoder.degree_q14 - degree_q14_last;
-        if(diff > 1000 || diff < -1000) // ÂË³ı50rpsÒÔÉÏµÄË²Ê±´íÎó½Ç¶ÈÊı¾İ
+        if(diff > 1000 || diff < -1000) // æ»¤é™¤50rpsä»¥ä¸Šçš„ç¬æ—¶é”™è¯¯è§’åº¦æ•°æ®
         {
             encoder.degree_q14 = degree_q14_last;
         }
@@ -106,12 +106,12 @@ void MC_servo_loop(void)
         case MIT:
         {
             // =========================================================================
-            // ¡¾ºËĞÄÓÅ»¯ 3¡¿64Î»°²È«½µÎ¬£¬¼¤»î DSP µÄ 32x32 Ó²¼şµ¥ÖÜÆÚ³Ë·¨Æ÷
+            // ã€æ ¸å¿ƒä¼˜åŒ– 3ã€‘64ä½å®‰å…¨é™ç»´ï¼Œæ¿€æ´» DSP çš„ 32x32 ç¡¬ä»¶å•å‘¨æœŸä¹˜æ³•å™¨
             // =========================================================================
             int64_t raw_degree_err = motor_ctrl.degree_ref_q14 - encoder.degree_q14;
             int64_t raw_velocity_err = motor_ctrl.velocity_ref_q14 - encoder.velocity_q14;
 
-            // À¹½Ø 64 Î»³¬´óÎó²î£¬°²È«½µÎ¬ÖÁ 32 Î»£¬¶Ï¾øºóĞøÒç³ö¿ÉÄÜ
+            // æ‹¦æˆª 64 ä½è¶…å¤§è¯¯å·®ï¼Œå®‰å…¨é™ç»´è‡³ 32 ä½ï¼Œæ–­ç»åç»­æº¢å‡ºå¯èƒ½
             int32_t degree_err_q14;
             if(raw_degree_err > 163840) degree_err_q14 = 163840;
             else if(raw_degree_err < -163840) degree_err_q14 = -163840;
@@ -123,33 +123,33 @@ void MC_servo_loop(void)
             else velocity_err_q14 = (int32_t)raw_velocity_err;
 
             // =========================================================================
-            // ¡¾ÓÅ»¯ 4¡¿±àÒëÆÚºÏ²¢³£Á¿£¬¼õÉÙÔËĞĞÊ±µÄ¸¡µãÔËËã
+            // ã€ä¼˜åŒ– 4ã€‘ç¼–è¯‘æœŸåˆå¹¶å¸¸é‡ï¼Œå‡å°‘è¿è¡Œæ—¶çš„æµ®ç‚¹è¿ç®—
             // =========================================================================
             #define MIT_TERM_SCALE (MOTOR_RATED_CUR * 1.41421356f / 40960.0f)
             #define MIT_IQ_SCALE   (40960.0f / (MOTOR_RATED_CUR * 1.41421356f))
 
-            // ´ËÊ± err ÊÇ 32 Î»£¬Kp ÊÇ 32 Î»¡£ËüÃÇÏà³Ë¸ÕºÃÀûÓÃ DSP µ¥ÖÜÆÚÖ¸Áî IMACL
+            // æ­¤æ—¶ err æ˜¯ 32 ä½ï¼ŒKp æ˜¯ 32 ä½ã€‚å®ƒä»¬ç›¸ä¹˜åˆšå¥½åˆ©ç”¨ DSP å•å‘¨æœŸæŒ‡ä»¤ IMACL
             int32_t p_term = (int32_t)( ( ((int64_t)motor_ctrl.Kp_q14 * degree_err_q14) >> 14 ) * MIT_TERM_SCALE );
             int32_t d_term = (int32_t)( ( ((int64_t)motor_ctrl.Kd_q14 * velocity_err_q14) >> 14 ) * MIT_TERM_SCALE );
             
             int32_t out_q14 = p_term + d_term + motor_ctrl.torque_ref_q14; 
 
             // =========================================================================
-            // ¡¾ÓÅ»¯ 5¡¿´¿¾»µÄÏŞ·ùÓëµ¹ÊıÏà³ËËã·¨
+            // ã€ä¼˜åŒ– 5ã€‘çº¯å‡€çš„é™å¹…ä¸å€’æ•°ç›¸ä¹˜ç®—æ³•
             // =========================================================================
             float t_limit = ODObjs.torque_limit;
             
-            // ¸¡µãÓòÏŞ·ù£ºÀûÓÃÈıÄ¿ÔËËã·û¼¤·¢µ×²ãÓ²¼ş±È½ÏÓÅ»¯
+            // æµ®ç‚¹åŸŸé™å¹…ï¼šåˆ©ç”¨ä¸‰ç›®è¿ç®—ç¬¦æ¿€å‘åº•å±‚ç¡¬ä»¶æ¯”è¾ƒä¼˜åŒ–
             t_limit = (t_limit > 30.0f) ? 30.0f : ((t_limit < 0.0f) ? 0.0f : t_limit);
             ODObjs.torque_limit = t_limit; 
 
-            // ×ªÎªÕûĞÍ±ß½ç
+            // è½¬ä¸ºæ•´å‹è¾¹ç•Œ
             int32_t out_limit = (int32_t)(t_limit * 16384.0f); 
             
-            // ÕûĞÍÏŞ·ù£¬³¹µ×±Ü¿ª¶Ô¶¯Ì¬±ß½çµ÷ÓÃ¸´ÔÓµÄ¸¡µã±È½Ï¿â
+            // æ•´å‹é™å¹…ï¼Œå½»åº•é¿å¼€å¯¹åŠ¨æ€è¾¹ç•Œè°ƒç”¨å¤æ‚çš„æµ®ç‚¹æ¯”è¾ƒåº“
             out_q14 = (out_q14 > out_limit) ? out_limit : ((out_q14 < -out_limit) ? -out_limit : out_q14);
             
-            // ³ıÒÔ 16384 ÓÅ»¯Îª³ËÒÔ³£Êıµ¹Êı 0.00006103515625f£¬¼«ËÙ¼ÆËã Iq
+            // é™¤ä»¥ 16384 ä¼˜åŒ–ä¸ºä¹˜ä»¥å¸¸æ•°å€’æ•° 0.00006103515625fï¼Œæé€Ÿè®¡ç®— Iq
             Iq = Torque_To_Iq((float)(-out_q14) * 0.00006103515625f) * MIT_IQ_SCALE; 
             Id = 0;
 
@@ -190,30 +190,30 @@ void MC_servo_loop(void)
 }
 
 /**
- * @brief ÖÃÎ»´íÎó
- * @param err ´íÎóÀàĞÍ
+ * @brief ç½®ä½é”™è¯¯
+ * @param err é”™è¯¯ç±»å‹
  */
 void set_err(tErrorCode err)
 {
-    if(ODObjs.error_code & err) // µ±Ç°´íÎóÒÑ´æÔÚ
+    if(ODObjs.error_code & err) // å½“å‰é”™è¯¯å·²å­˜åœ¨
     {
         return; 
     }
     else
     {
-        ODObjs.error_code |= err; // ÖÃÎ»¸Ã´íÎó
+        ODObjs.error_code |= err; // ç½®ä½è¯¥é”™è¯¯
     }
 }
 
 /**
- * @brief Çå³ı´íÎó
- * @param err ´íÎóÀàĞÍ
+ * @brief æ¸…é™¤é”™è¯¯
+ * @param err é”™è¯¯ç±»å‹
  */
 void clr_err(tErrorCode err)
 {
-    if(ODObjs.error_code & err) // µ±Ç°´íÎóÒÑ´æÔÚ
+    if(ODObjs.error_code & err) // å½“å‰é”™è¯¯å·²å­˜åœ¨
     {
-        ODObjs.error_code &= ~err; // Çå³ı¸Ã´íÎó
+        ODObjs.error_code &= ~err; // æ¸…é™¤è¯¥é”™è¯¯
     }
 }
 
@@ -226,7 +226,7 @@ float under_v_level = 20.0f;
 #define BOARD_TEMP_RECOVER 50
 
 #define ADC_MAX 4095.0f
-// ÌáÇ°¼ÆËãºÃ³£Êıµ¹Êı£¬½«ÔËĞĞÊ±µÄ¡°³ı·¨¡±×ª»¯Îª¡°³Ë·¨¡±
+// æå‰è®¡ç®—å¥½å¸¸æ•°å€’æ•°ï¼Œå°†è¿è¡Œæ—¶çš„â€œé™¤æ³•â€è½¬åŒ–ä¸ºâ€œä¹˜æ³•â€
 #define INV_T25     0.0033540164f  // 1.0f / 298.15f
 #define INV_BETA    0.0002902758f  // 1.0f / 3445.0f
 
@@ -236,8 +236,8 @@ extern float torque;
 float i2t_acc = 0.0f;
 
 /**
- * @brief ²É¼¯µç»ú¿ØÖÆÏà¹ØÊı¾İ
- * @note ·ÅÔÚstimer¿ò¼ÜÏÂ100hzÑ­»·Ö´ĞĞ
+ * @brief é‡‡é›†ç”µæœºæ§åˆ¶ç›¸å…³æ•°æ®
+ * @note æ”¾åœ¨stimeræ¡†æ¶ä¸‹100hzå¾ªç¯æ‰§è¡Œ
  */
 void info_collect_loop(void)
 {
@@ -247,26 +247,26 @@ void info_collect_loop(void)
 
     const float alpha = 0.001f;
 
-    /* -------- ÎÂ¶È½âËãºËĞÄÓÅ»¯ -------- */
-    // ÌáÈ¡ ADC Öµµ½¾Ö²¿±äÁ¿£¬·ÀÖ¹±àÒëÆ÷¶à´Î¶ÁÈ¡ÍâÉè¼Ä´æÆ÷µ¼ÖÂ¿ªÏúÔö¼Ó
+    /* -------- æ¸©åº¦è§£ç®—æ ¸å¿ƒä¼˜åŒ– -------- */
+    // æå– ADC å€¼åˆ°å±€éƒ¨å˜é‡ï¼Œé˜²æ­¢ç¼–è¯‘å™¨å¤šæ¬¡è¯»å–å¤–è®¾å¯„å­˜å™¨å¯¼è‡´å¼€é”€å¢åŠ 
     float adc_drv = (float)ADC_NTC;   
     float adc_mot = (float)ADC_NTC_M; 
 
-    // ¡¾ÊıÑ§»¯¼ò 1¡¿£º
-    // Ô­Âß¼­: r_ntc = 10000.0 * ADC / (4095.0 - ADC); 
+    // ã€æ•°å­¦åŒ–ç®€ 1ã€‘ï¼š
+    // åŸé€»è¾‘: r_ntc = 10000.0 * ADC / (4095.0 - ADC); 
     //         logf(r_ntc / 10000.0)
-    // ÕâÀïµÄ 10k ÉÏÀ­µç×èºÍ 10k »ù×¼µç×èÔÚ´úÊıÉÏÍêÃÀµÖÏû¡£
-    // »¯¼òºó: logf(ADC / (4095.0 - ADC))£¬Ö±½ÓÊ¡È¥ÁËÒ»´Î³Ë·¨ºÍÒ»´Î³ı·¨£¡
+    // è¿™é‡Œçš„ 10k ä¸Šæ‹‰ç”µé˜»å’Œ 10k åŸºå‡†ç”µé˜»åœ¨ä»£æ•°ä¸Šå®Œç¾æŠµæ¶ˆã€‚
+    // åŒ–ç®€å: logf(ADC / (4095.0 - ADC))ï¼Œç›´æ¥çœå»äº†ä¸€æ¬¡ä¹˜æ³•å’Œä¸€æ¬¡é™¤æ³•ï¼
     float ratio_drv = adc_drv / (4095.0f - adc_drv);
     float ratio_mot = adc_mot / (4095.0f - adc_mot);
 
-    // ¡¾ÊıÑ§»¯¼ò 2¡¿£º
-    // Ô­Âß¼­: 1.0f / (1.0f / 298.15f + logf(...) / 3445.0f)
-    // ÀûÓÃÔ¤±àÒë³£Á¿£¬½«Á½´Î¼«ÂıµÄ float ±äÁ¿³ı·¨±äÎªÁË float ³Ë·¨ºÍ¼Ó·¨¡£
+    // ã€æ•°å­¦åŒ–ç®€ 2ã€‘ï¼š
+    // åŸé€»è¾‘: 1.0f / (1.0f / 298.15f + logf(...) / 3445.0f)
+    // åˆ©ç”¨é¢„ç¼–è¯‘å¸¸é‡ï¼Œå°†ä¸¤æ¬¡ææ…¢çš„ float å˜é‡é™¤æ³•å˜ä¸ºäº† float ä¹˜æ³•å’ŒåŠ æ³•ã€‚
     float board_temp_raw = 1.0f / (INV_T25 + INV_BETA * logf(ratio_drv)) - 273.15f;
     float motor_temp_raw = 1.0f / (INV_T25 + INV_BETA * logf(ratio_mot)) - 273.15f;
 
-    /* -------- Ò»½×ÂË²¨£¨´ø³õÊ¼»¯£© -------- */
+    /* -------- ä¸€é˜¶æ»¤æ³¢ï¼ˆå¸¦åˆå§‹åŒ–ï¼‰ -------- */
     if (!temp_filt_inited)
     {
         board_temp_filt = board_temp_raw;
@@ -282,9 +282,9 @@ void info_collect_loop(void)
     board_temp = board_temp_filt;
     motor_temp = motor_temp_filt;
 
-    /* -------- ±£»¤Âß¼­ÓÅ»¯ -------- */
-    // Ê¹ÓÃÂß¼­Óë (&&) ºÏ²¢Ç¶Ì×µÄ if¡£
-    // ±àÒëÆ÷»áÀûÓÃ¶ÌÂ·ÇóÖµ£¨Short-circuit evaluation£©ÌØĞÔ£¬Èô´íÎóÂëÒÑÖÃÎ»£¬Ö±½ÓÌø¹ıÎÂ¶È¸¡µã±È½Ï£¬¼õÉÙ·ÖÖ§Á÷Ë®ÏßÇå¿Õ¡£
+    /* -------- ä¿æŠ¤é€»è¾‘ä¼˜åŒ– -------- */
+    // ä½¿ç”¨é€»è¾‘ä¸ (&&) åˆå¹¶åµŒå¥—çš„ ifã€‚
+    // ç¼–è¯‘å™¨ä¼šåˆ©ç”¨çŸ­è·¯æ±‚å€¼ï¼ˆShort-circuit evaluationï¼‰ç‰¹æ€§ï¼Œè‹¥é”™è¯¯ç å·²ç½®ä½ï¼Œç›´æ¥è·³è¿‡æ¸©åº¦æµ®ç‚¹æ¯”è¾ƒï¼Œå‡å°‘åˆ†æ”¯æµæ°´çº¿æ¸…ç©ºã€‚
     if(!(ODObjs.error_code & ERR_OVER_TEMP_MOTOR) && (motor_temp > ODObjs.over_temp_motor_level))
     {
         set_err(ERR_OVER_TEMP_MOTOR);
@@ -314,46 +314,46 @@ void info_collect_loop(void)
             motor_ctrl.state = INIT;
         }
     }
-/* -------- I?t Ëã·¨¸ß¼¶ÈÈ±£»¤£¨¶Â×ª±£»¤£© -------- */
-    // Ğ§¹û£ºÂúÁ¿³Ì(30.0N) ³ÖĞø 5s ÅĞ¶¨¹ıÁ÷¡£
-    // Éè¶¨ 28.0N Îª·¢ÈÈËÀÇø(Á¬ĞøÈİÈÌµçÁ÷)¡£Ö»ÒªµÍÓÚ 28N »ı·Ö¾Í²»»áÀÛ»ı¡£
-    // static float i2t_acc = 0.0f; // ×¢Òâ£º´Ë±äÁ¿ĞèÔÚº¯ÊıÍâ»ò×÷Îª¾²Ì¬±äÁ¿¶¨Òå
+/* -------- I?t ç®—æ³•é«˜çº§çƒ­ä¿æŠ¤ï¼ˆå µè½¬ä¿æŠ¤ï¼‰ -------- */
+    // æ•ˆæœï¼šæ»¡é‡ç¨‹(30.0N) æŒç»­ 5s åˆ¤å®šè¿‡æµã€‚
+    // è®¾å®š 28.0N ä¸ºå‘çƒ­æ­»åŒº(è¿ç»­å®¹å¿ç”µæµ)ã€‚åªè¦ä½äº 28N ç§¯åˆ†å°±ä¸ä¼šç´¯ç§¯ã€‚
+    // static float i2t_acc = 0.0f; // æ³¨æ„ï¼šæ­¤å˜é‡éœ€åœ¨å‡½æ•°å¤–æˆ–ä½œä¸ºé™æ€å˜é‡å®šä¹‰
     
-    const float dt = 0.01f; // 100Hz Ñ­»·Ê±¼ä
+    const float dt = 0.01f; // 100Hz å¾ªç¯æ—¶é—´
     
-    // 1. »ù×¼²âÊÔµãÖ±½ÓÃª¶¨ 30.0N (²»ÔÙ´ò 95% ÕÛ¿Û)
+    // 1. åŸºå‡†æµ‹è¯•ç‚¹ç›´æ¥é”šå®š 30.0N (ä¸å†æ‰“ 95% æŠ˜æ‰£)
     const float t_trip_test = 30.0f; 
     
-    // 2. ³ÖĞøÈİÈÌËÀÇøÀ­¸ßµ½ 28.0N
+    // 2. æŒç»­å®¹å¿æ­»åŒºæ‹‰é«˜åˆ° 28.0N
     const float t_rated = 28.0f;  
     
-    // 3. ²âÊÔµãÈİÈÌÊ±¼ä
+    // 3. æµ‹è¯•ç‚¹å®¹å¿æ—¶é—´
     const float t_trip_time = 5.0f; 
     
-    // 4. ×Ô¶¯¼ÆËã»ı·ÖãĞÖµ
-    // ÊıÑ§¹ı³Ì: (30^2 - 28^2) * 5.0 = (900 - 784) * 5.0 = 116 * 5.0 = 580.0
+    // 4. è‡ªåŠ¨è®¡ç®—ç§¯åˆ†é˜ˆå€¼
+    // æ•°å­¦è¿‡ç¨‹: (30^2 - 28^2) * 5.0 = (900 - 784) * 5.0 = 116 * 5.0 = 580.0
     const float i2t_threshold = (t_trip_test * t_trip_test - t_rated * t_rated) * t_trip_time;
 
     float current_sq = torque * torque;
     float rated_sq = t_rated * t_rated;
 
-    // ºËĞÄÀÛ¼ÓÆ÷£º·¢ÈÈ¼õÈ¥»ù´¡É¢ÈÈ
+    // æ ¸å¿ƒç´¯åŠ å™¨ï¼šå‘çƒ­å‡å»åŸºç¡€æ•£çƒ­
     i2t_acc += (current_sq - rated_sq) * dt;
 
-    // ÀäÈ´ÏÂÏŞÀ¹½Ø
+    // å†·å´ä¸‹é™æ‹¦æˆª
     if(i2t_acc < 0.0f) 
     {
-        i2t_acc = 0.0f; // ÍêÈ«ÀäÈ´£¬»ı·ÖÇåÁã
+        i2t_acc = 0.0f; // å®Œå…¨å†·å´ï¼Œç§¯åˆ†æ¸…é›¶
     }
     
-    // ´¥·¢±£»¤ÅĞ¶Ï
+    // è§¦å‘ä¿æŠ¤åˆ¤æ–­
     if(!(ODObjs.error_code & ERR_OVER_CURRENT_SOFT) && (i2t_acc > i2t_threshold))
     {
-        set_err(ERR_OVER_CURRENT_SOFT); // ´¥·¢ I?t ÈÈ¹ıÔØ£¨¹ıÁ÷¶Â×ª£©±£»¤
+        set_err(ERR_OVER_CURRENT_SOFT); // è§¦å‘ I?t çƒ­è¿‡è½½ï¼ˆè¿‡æµå µè½¬ï¼‰ä¿æŠ¤
         motor_ctrl.state = SOFT_STOP;
     }
 
-    /* -------- CAN ×´Ì¬»ú¼ì²â -------- */
+    /* -------- CAN çŠ¶æ€æœºæ£€æµ‹ -------- */
     static uint16_t cnt = 0; 
     if(cnt < 1000)
     {
@@ -361,7 +361,7 @@ void info_collect_loop(void)
     }
     else
     {
-        // ÅĞ¶Ïcan_phyÁ¬Í¨ĞÔ
+        // åˆ¤æ–­can_phyè¿é€šæ€§
         if(ODObjs.heartbeat_consumer_enable) 
         {
             canfd_timeout_cnt++;
@@ -382,7 +382,7 @@ void info_collect_loop(void)
             }
         }
 
-        // ÅĞ¶Ïcan_bus_off
+        // åˆ¤æ–­can_bus_off
         static uint32_t can_buf_off_cnt = 0;
         if(CanfdRegs.CFG_STAT.bit.BUSOFF) 
         {
@@ -406,12 +406,12 @@ void info_collect_loop(void)
             canfd_buf_off_flag = 0;
         }
 
-        // ÅĞ¶ÏÇ·Ñ¹
-        if((gUDC.uDCBigFilter * 0.1f) < under_v_level)
+        // åˆ¤æ–­æ¬ å‹
+        if((gUDC.uDCFilter * 0.1f) < under_v_level)
         {
             set_err(ERR_UNDER_VOLTAGE);
         }
-        if((ODObjs.error_code & ERR_UNDER_VOLTAGE) && ((gUDC.uDCBigFilter * 0.1f) > under_v_level)) 
+        if((ODObjs.error_code & ERR_UNDER_VOLTAGE) && ((gUDC.uDCFilter * 0.1f) > under_v_level)) 
         {
             clr_err(ERR_UNDER_VOLTAGE);
         }
@@ -419,7 +419,7 @@ void info_collect_loop(void)
 
 
 
-    /* -------- ĞÄÌøÖ¡ -------- */
+    /* -------- å¿ƒè·³å¸§ -------- */
     static uint16_t heartbeat_cnt = 0;
     if(++heartbeat_cnt >= 100) 
     {
