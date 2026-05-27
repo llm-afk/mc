@@ -86,6 +86,7 @@ void led_loop(void)
             if(led_state != led_state_last)
             {
                 lpg_set_pattern(&lpg.units[0], led_err_uncalibrated, ARRAY_SIZE(led_err_uncalibrated));
+                set_err(ERR_ENC_CALIB);
             }
         }
         else if(cnt <= 1000)

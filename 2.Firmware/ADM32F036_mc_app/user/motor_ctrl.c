@@ -165,6 +165,7 @@ void MC_servo_loop(void)
             {
                 RunSignal = 0;
                 motor_ctrl.state = MIT;
+                clr_err(ERR_ENC_CALIB);
             }
             break;
         }
