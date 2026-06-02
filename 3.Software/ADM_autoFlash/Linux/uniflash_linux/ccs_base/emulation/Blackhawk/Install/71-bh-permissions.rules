@@ -1,0 +1,30 @@
+# Blackhawk Rules Definitions
+# 23 MAY 2012
+#
+
+# Blackhawk XDS510 USB Devices
+#    Models:
+#       USB2000
+#       USB510L
+#       USB510W
+#
+SUBSYSTEM=="usb",ENV{DEVTYPE}=="usb_device",ATTRS{idVendor}=="0b1e",ATTRS{idProduct}=="8008",MODE:="0666"
+
+# Blackhawk XDS560v1 USB Devices
+#    Models:
+#       USB560
+#       USB560-M
+#       USB560-BP
+#
+SUBSYSTEM=="usb",ENV{DEVTYPE}=="usb_device",ATTRS{idVendor}=="0b1e",ATTRS{idProduct}=="8007",MODE:="0666"
+
+
+# Blackhawk XDS560v2 USB devices 
+#    Models:
+#       USB560v2
+#       XDS560v2
+#       XDS560v2-BP
+#       XDS560v2 Mezzanine
+#
+SUBSYSTEM=="usb",ENV{DEVTYPE}=="usb_device",ATTRS{idVendor}=="0b1e",ATTRS{idProduct}=="0009",MODE:="0666"
+

@@ -1,0 +1,7 @@
+# 编译产物
+Debug/
+
+# 烧录工具中的固件副本
+3.Software/ADM_autoFlash/Windows/*_released_fw.bin
+3.Software/ADM_autoFlash/Linux/*_released_fw.bin
+3.Software/ADM_autoFlash/_Released_BIN/

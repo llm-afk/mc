@@ -1,0 +1,14 @@
+{
+    "propertiesFile": "TMS320F28P551x_320KB_FlashProperties.xml",
+    "target": {
+        "TMS320C28XX": {
+            "JTAG": {
+                "dllName": "FlashC2000v5",
+                "configOptions": {
+                    "needFlashProperties": "true",
+                    "needFlashUtility": "true"
+                }
+            }
+        }
+    }
+}
