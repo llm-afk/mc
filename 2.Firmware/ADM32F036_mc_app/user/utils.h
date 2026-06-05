@@ -2,6 +2,7 @@
 #define UTILS_H
 
 #include "MainInclude.h"
+#include "torque_calib.h"
 
 typedef struct
 {
@@ -42,8 +43,6 @@ typedef struct
 uint32_t square(uint64_t x);
 float logf(float x);
 
-float Iq_To_Torque(float iq);
-float Torque_To_Iq(float target_torque);
 
 float imt_current_to_float(int16_t M, int16_t T, float rated_cur);
 

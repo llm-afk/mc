@@ -45,7 +45,7 @@ static void dictionary_init(void)
 
     ODObjs.torque_limit = 30.0f;
     ODObjs.over_temp_drv_level = 85.0f;
-    ODObjs.over_temp_motor_level = 125.0f;
+    ODObjs.over_temp_motor_level = 150.0f;
 
     ODObjs.in_encoder_offset = 0;
     ODObjs.ex_encoder_offset = 0;

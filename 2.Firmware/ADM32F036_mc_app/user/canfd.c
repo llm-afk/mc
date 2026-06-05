@@ -273,7 +273,7 @@ static void parse_frame(canFrame_t *frame)
         }
         case MSG_ID_RPDO_6: // 运控数据交互
         {
-            if(RunSignal == 0)
+            if(RunSignal == 0 && ODObjs.error_code == 0)
             {
                 RunSignal = 1;
             }
