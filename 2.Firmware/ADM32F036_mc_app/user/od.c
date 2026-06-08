@@ -15,6 +15,13 @@ static const OD_entry_t ODList[] =
 {
     {0x2000, &ODObjs.error_code,                2, ATTR_RAM | ATTR_R,  NULL},
     {0x2002, &ODObjs.control_word,              2, ATTR_RAM | ATTR_RW, MC_controlword_update},
+
+    {0x2004, &ODObjs.sn_s0,                     4, ATTR_ROM | ATTR_RW,  NULL},
+    {0x2005, &ODObjs.sn_s1,                     4, ATTR_ROM | ATTR_RW,  NULL},
+    {0x2006, &ODObjs.sn_s2,                     4, ATTR_ROM | ATTR_RW,  NULL},
+    {0x2007, &ODObjs.sn_s3,                     4, ATTR_ROM | ATTR_RW,  NULL},
+    {0x2008, &ODObjs.sn_s4,                     4, ATTR_ROM | ATTR_RW,  NULL},
+    {0x2009, &ODObjs.sn_s5,                     4, ATTR_ROM | ATTR_RW,  NULL},
     
     {0x2040, &ODObjs.node_id,                   1, ATTR_ROM | ATTR_RW, ResetDSP},  
 
@@ -36,6 +43,13 @@ static void dictionary_init(void)
 {
     ODObjs.error_code = 0;
     ODObjs.control_word = 0;
+
+    ODObjs.sn_s0 = 0;
+    ODObjs.sn_s1 = 0;
+    ODObjs.sn_s2 = 0;
+    ODObjs.sn_s3 = 0;
+    ODObjs.sn_s4 = 0;
+    ODObjs.sn_s5 = 0;
 
     ODObjs.node_id = 1;
     ODObjs.is_calibrated = 0;
@@ -71,6 +85,12 @@ static uint16_t get_eeprom_key_from_index(uint16_t idx)
         case 0x2061: return 6;   // over_temp_motor_level
         case 0x2043: return 7;   // heartbeat_Producer_enable
         case 0x2044: return 8;   // heartbeat_consumer_enable
+        case 0x2004: return 10;  // sn_s0
+        case 0x2005: return 11;  // sn_s1
+        case 0x2006: return 12;  // sn_s2
+        case 0x2007: return 13;  // sn_s3
+        case 0x2008: return 14;  // sn_s4
+        case 0x2009: return 15;  // sn_s5
         default: return 0xFF;    // 无效索引，返回错误标识
     }
 }

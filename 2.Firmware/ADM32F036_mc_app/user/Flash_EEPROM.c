@@ -18,6 +18,12 @@ eeprom_item_t eeprom_item_list[] = {
     {7, sizeof(ODObjs.heartbeat_Producer_enable),&ODObjs.heartbeat_Producer_enable},
     {8, sizeof(ODObjs.heartbeat_consumer_enable),&ODObjs.heartbeat_consumer_enable},
     {9, sizeof(ODObjs.is_calibrated),           &ODObjs.is_calibrated},
+    {10,sizeof(ODObjs.sn_s0),                    &ODObjs.sn_s0},
+    {11,sizeof(ODObjs.sn_s1),                    &ODObjs.sn_s1},
+    {12,sizeof(ODObjs.sn_s2),                    &ODObjs.sn_s2},
+    {13,sizeof(ODObjs.sn_s3),                    &ODObjs.sn_s3},
+    {14,sizeof(ODObjs.sn_s4),                    &ODObjs.sn_s4},
+    {15,sizeof(ODObjs.sn_s5),                    &ODObjs.sn_s5},
 };
 
 /**

@@ -15,6 +15,13 @@ typedef struct {
     uint16_t error_code;                  // tErrorCode
     uint16_t control_word;                // MC_controlword_update
 
+    uint32_t sn_s0;                       // 存放sn码的高4个字符
+    uint32_t sn_s1;
+    uint32_t sn_s2; 
+    uint32_t sn_s3; 
+    uint32_t sn_s4;                      
+    uint32_t sn_s5;                   
+
     uint16_t node_id;         
 
     uint16_t heartbeat_Producer_enable; // 是否开启驱动器的心跳上报功能，开启后驱动器会每秒发送一次心跳帧
