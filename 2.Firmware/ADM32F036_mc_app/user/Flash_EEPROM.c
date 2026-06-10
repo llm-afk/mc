@@ -24,6 +24,7 @@ eeprom_item_t eeprom_item_list[] = {
     {13,sizeof(ODObjs.sn_s3),                    &ODObjs.sn_s3},
     {14,sizeof(ODObjs.sn_s4),                    &ODObjs.sn_s4},
     {15,sizeof(ODObjs.sn_s5),                    &ODObjs.sn_s5},
+    {16,sizeof(ODObjs.sn_s6),                    &ODObjs.sn_s6},
 };
 
 /**

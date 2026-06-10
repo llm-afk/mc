@@ -22,6 +22,7 @@ static const OD_entry_t ODList[] =
     {0x2007, &ODObjs.sn_s3,                     4, ATTR_ROM | ATTR_RW,  NULL},
     {0x2008, &ODObjs.sn_s4,                     4, ATTR_ROM | ATTR_RW,  NULL},
     {0x2009, &ODObjs.sn_s5,                     4, ATTR_ROM | ATTR_RW,  NULL},
+    {0x200A, &ODObjs.sn_s6,                     4, ATTR_ROM | ATTR_RW,  NULL},
     
     {0x2040, &ODObjs.node_id,                   1, ATTR_ROM | ATTR_RW, ResetDSP},  
 
@@ -50,6 +51,7 @@ static void dictionary_init(void)
     ODObjs.sn_s3 = 0;
     ODObjs.sn_s4 = 0;
     ODObjs.sn_s5 = 0;
+    ODObjs.sn_s6 = 0;
 
     ODObjs.node_id = 1;
     ODObjs.is_calibrated = 0;
@@ -91,6 +93,7 @@ static uint16_t get_eeprom_key_from_index(uint16_t idx)
         case 0x2007: return 13;  // sn_s3
         case 0x2008: return 14;  // sn_s4
         case 0x2009: return 15;  // sn_s5
+        case 0x200A: return 16;  // sn_s6
         default: return 0xFF;    // 无效索引，返回错误标识
     }
 }
