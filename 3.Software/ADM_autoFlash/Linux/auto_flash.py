@@ -44,7 +44,16 @@ def ts(): return datetime.now().strftime("%H:%M:%S")
 
 def log(msg, level="INFO"):
     lvl = level.upper().strip()
-    tag = lvl.ljust(5)
+    if lvl in ["INFO", "WAIT", "READY"]:
+        tag = "INFO "
+    elif lvl in ["SUCCESS", "RESULT"]:
+        tag = "DONE "
+    elif lvl in ["ERROR", "FAILED"]:
+        tag = "ERR  "
+    elif lvl == "RAW":
+        tag = "RAW  "
+    else:
+        tag = lvl.ljust(5)
     print(f"[{ts()}][{tag}] {msg}")
 
 def result_block(ok, msg1, msg2=""):
@@ -98,6 +107,10 @@ try:
 except Exception:
     pass
 
+if not os.path.exists(DBGTJAG):
+    log(f"错误: 找不到 dbgjtag 工具 '{DBGTJAG}'", "ERROR")
+    log("请确保已安装 TI UniFlash 或将 dbgjtag 放入本地绿色包中", "ERROR")
+
 # ============================================================
 # 硬件检测
 # ============================================================
@@ -144,6 +157,27 @@ def check_hw(fast_mode=False):
         return False, False, False
 
 # ============================================================
+# 探针断开检测
+# ============================================================
+def wait_unplug():
+    time.sleep(0.5)
+    log("等待探针抬起...", "INFO")
+
+    physical_disconnect_cnt = 0
+    while True:
+        _, jt_ok, is_physical = check_hw(fast_mode=False)
+        if not is_physical:
+            physical_disconnect_cnt += 1
+        else:
+            physical_disconnect_cnt = 0
+
+        if physical_disconnect_cnt >= 3:
+            log("检测到探针已断开", "INFO")
+            time.sleep(0.3)
+            return
+        time.sleep(0.1)
+
+# ============================================================
 # 烧录流程
 # ============================================================
 def flash_production(ccxml, boot_pattern, boot_addr, app_pattern, app_addr):
@@ -176,23 +210,33 @@ def flash_production(ccxml, boot_pattern, boot_addr, app_pattern, app_addr):
     cmd = [DSLITE, f"--config={ccxml}", "-e", "-v", "-f", boot_arg, app_arg, "-u"]
     if not DSLITE.endswith(".sh"):
         cmd.insert(1, "flash")
-    
+
+    # DSLite 初始化时会输出大量 XML 解析和寄存器映射信息，全部过滤掉
+    NOISE_PREFIXES = (
+        "Parsing ",
+        "Mapping registers:",
+        "Initializing Register Database",
+        "Creating tables and indexes",
+        "Configuring Debugger",
+        "Executing Startup Scripts",
+        "Initializing: ",
+        "DSLite version",
+    )
+
     try:
         proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
         ok = False
         for line in proc.stdout:
             line = line.strip()
             if not line: continue
-            
-            # 精简输出：过滤掉无意义的底层加载日志
-            if "Mapping registers" in line or "Initializing:" in line or "Executing Startup Scripts" in line or "Configuring Debugger" in line or "Parsing" in line:
+
+            # 跳过所有初始化噪音行
+            if any(line.startswith(prefix) for prefix in NOISE_PREFIXES):
                 continue
-                
+
             log(line, "RAW")
             if "Success" in line or "Program verification successful" in line:
                 ok = True
-            if "error" in line.lower() or "failed" in line.lower() or "fatal" in line.lower():
-                pass
         proc.wait()
         return ok and (proc.returncode == 0)
     except Exception as e:
@@ -236,25 +280,10 @@ def main():
                 result_block(True, "Boot + App 烧录成功并已启动", "请松开探针")
             else:
                 result_block(False, "烧录失败", "请重新压紧探针")
-            
-            # 等待拔出探针
-            time.sleep(0.5)
-            log("等待探针抬起...", "INFO")
-            disconnect_cnt = 0
-            while True:
-                _, _, physical_check = check_hw(fast_mode=False)
-                if not physical_check:
-                    disconnect_cnt += 1
-                else:
-                    disconnect_cnt = 0
-                    
-                if disconnect_cnt >= 3:
-                    log("检测到探针已断开", "INFO")
-                    time.sleep(0.3)
-                    state = None # 触发下一轮检测状态更新
-                    break
-                time.sleep(0.1)
-                
+
+            wait_unplug()
+            state = None
+
         time.sleep(0.2)
 
 if __name__ == "__main__":

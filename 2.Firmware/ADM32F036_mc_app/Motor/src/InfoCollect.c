@@ -6,7 +6,7 @@
 #include "Parameter.h"
 
 /****************************************************************
-	ADCµÄÍ¨ÓÃ´¦Àí: ADCÄ£¿é±¾ÉíµÄÆ¯ÒÆ´¦Àí
+	ADCçš„é€šç”¨å¤„ç†: ADCæ¨¡å—æœ¬èº«çš„æ¼‚ç§»å¤„ç†
 *****************************************************************/
 void ADCProcess(void)
 {
@@ -14,12 +14,12 @@ void ADCProcess(void)
 	gADC.ResetTime = (gADC.ResetTime>1000)?1000:gADC.ResetTime;
 	
 #if 0
-	if(gADC.ZeroCnt >= 100)		return;			//ADCÄ£¿éÆ¯ÒÆ¼ì²âÍê±Ï
+	if(gADC.ZeroCnt >= 100)		return;			//ADCæ¨¡å—æ¼‚ç§»æ£€æµ‹å®Œæ¯•
 
-	// Record Êµ¼Ê²âÊÔ½á¹û£¬m_Zero = 0. 
+	// Record å®é™…æµ‹è¯•ç»“æœï¼Œm_Zero = 0. 
 	// AdcRegs.ADCOFFTRIM.all = 0
 	///////////////////////////////////
-	m_Zero = ((int)ADC_GND)>>4;					//¿ªÊ¼ADCÄ£¿éÆ¯ÒÆ¼ì²â
+	m_Zero = ((int)ADC_GND)>>4;					//å¼€å§‹ADCæ¨¡å—æ¼‚ç§»æ£€æµ‹
 	if(m_Zero == 0)
 	{
 		gADC.ZeroCnt = 0;
@@ -47,19 +47,29 @@ void ADCProcess(void)
 }
 
 /****************************************************************
-	»ñÈ¡Ä¸ÏßµçÑ¹Êı¾İ£¬Êä³ögUDC
+	è·å–æ¯çº¿ç”µå‹æ•°æ®ï¼Œè¾“å‡ºgUDC
 *****************************************************************/
 void GetUDCInfo(void)
 {
 	Uint m_uDC;
     long ADCTemp = ADC_UDC;
-   	m_uDC = ((Uint32)(ADCTemp) * gUDC.Coff)>>16; // °´ÕÕ48VµÄÂúÁ¿³ÌËãÄ¸ÏßµçÑ¹
+   	m_uDC = ((Uint32)(ADCTemp) * gUDC.Coff)>>16; // æŒ‰ç…§48Vçš„æ»¡é‡ç¨‹ç®—æ¯çº¿ç”µå‹
    	gUDC.uDC = (gUDC.uDC + m_uDC)>>1;
 #if 0
     gUDC.uDCFilter = gUDC.uDCFilter - (gUDC.uDCFilter>>3) + (gUDC.uDC>>3);
     gUDC.uDCBigFilter = Filter32(gUDC.uDC,gUDC.uDCBigFilter);
 #else
-    static long UdcAcc, UdcAcc2;
+    static long UdcAcc = 0, UdcAcc2 = 0;
+    static uint16_t first_run = 1;
+
+    if(first_run)
+    {
+        first_run = 0;
+        // é¢„åŠ è½½ï¼šåœ¨ç¬¬ä¸€æ¬¡é‡‡é›†æ—¶ï¼Œç›´æ¥ç”¨åˆå§‹ç”µå‹å¡«æ»¡ç§¯åˆ†å™¨ï¼Œé¿å…ä»0å¼€å§‹çˆ¬å‡å¯¼è‡´è¯¯æŠ¥æ¬ å‹
+        UdcAcc = (long)gUDC.uDC << 16;
+        UdcAcc2 = (long)gUDC.uDC << 16;
+    }
+
     UdcAcc = ((((long)gUDC.uDC << 16) - UdcAcc) >> 3) + UdcAcc;
     gUDC.uDCFilter  = (UdcAcc + 0x8000) >> 16;
     UdcAcc2 = ((((long)gUDC.uDC << 16) - UdcAcc2) >> 6) + UdcAcc2;
@@ -68,7 +78,7 @@ void GetUDCInfo(void)
 }
 
 /****************************************************************
-    »ñÈ¡Ä¸ÏßµçÁ÷Êı¾İ
+    è·å–æ¯çº¿ç”µæµæ•°æ®
 *****************************************************************/
 // long GetIDData[6];
 void GetIDCInfo(void)
@@ -88,7 +98,7 @@ void GetIDCInfo(void)
 }
 
 /****************************************************************
-	»ñÈ¡ÎÂ¶È²ÉÑùÊı¾İ
+	è·å–æ¸©åº¦é‡‡æ ·æ•°æ®
 *****************************************************************/
 void GetTemperatureInfo(void)
 {
@@ -107,8 +117,8 @@ void GetTemperatureInfo(void)
 }
 
 /****************************************************************
-	»ñÈ¡Íâ²¿Ä£ÄâÁ¿²ÉÑùÊı¾İ
-	Êµ¼ÊÃ»ÓÃ£¬¿ÉÒÔÉ¾³ı£¡
+	è·å–å¤–éƒ¨æ¨¡æ‹Ÿé‡é‡‡æ ·æ•°æ®
+	å®é™…æ²¡ç”¨ï¼Œå¯ä»¥åˆ é™¤ï¼
 *****************************************************************/
 void GetAIInfo(void)
 {
@@ -125,7 +135,7 @@ void GetAIInfo(void)
 }
 
 /****************************************************************
-    »ñÈ¡µçÁ÷²ÉÑùÊı¾İ£¬Êä³ögCurSamp
+    è·å–ç”µæµé‡‡æ ·æ•°æ®ï¼Œè¾“å‡ºgCurSamp
 *****************************************************************/
 #if (CURRENT_SAMPLE_TYPE == CURRENT_SAMPLE_1SHUNT)
 long m_Iu,m_Iv,m_Iw;
@@ -388,12 +398,12 @@ void SVPWM_3ShuntGetPhaseCurrent(void)
         IvCur = (int)(ADC_IV - (Uint)32768);
 
         // eg,751, then 751 >> 4 = 46. ~ 37mV.
-        m_Iu = (long)IuCur - (long)gExcursionInfo.ErrIu;    //È¥³ıÁãÆ¯
+        m_Iu = (long)IuCur - (long)gExcursionInfo.ErrIu;    //å»é™¤é›¶æ¼‚
         m_Iu = __IQsat(m_Iu,32767,-32767);
         m_Iu = (m_Iu * gCurSamp.Coff)>>15;
         m_Iu = __IQsat(m_Iu,32767,-32767);
 
-        m_Iv = (long)IvCur - (long)gExcursionInfo.ErrIv;    //È¥³ıÁãÆ¯
+        m_Iv = (long)IvCur - (long)gExcursionInfo.ErrIv;    //å»é™¤é›¶æ¼‚
         m_Iv = __IQsat(m_Iv,32767,-32767);
         m_Iv = (m_Iv * gCurSamp.Coff)>>15;
         m_Iv = __IQsat(m_Iv,32767,-32767);
@@ -401,7 +411,7 @@ void SVPWM_3ShuntGetPhaseCurrent(void)
         m_Iw = - m_Iu - m_Iv;
         m_Iw = __IQsat(m_Iw,32767,-32767);
 
-        // ¸øÍâ²¿½Ó¿ÚÄ£¿é£¬Ë²Ê±Öµ...
+        // ç»™å¤–éƒ¨æ¥å£æ¨¡å—ï¼Œç¬æ—¶å€¼...
         gCurSamp.U = m_Iu;
         gCurSamp.V = m_Iv;
         gCurSamp.W = m_Iw;
@@ -412,12 +422,12 @@ void SVPWM_3ShuntGetPhaseCurrent(void)
         IwCur = (int)(ADC_IW - (Uint)32768);
 
         // eg,751, then 751 >> 4 = 46. ~ 37mV.
-        m_Iu = (long)IuCur - (long)gExcursionInfo.ErrIu;    //È¥³ıÁãÆ¯
+        m_Iu = (long)IuCur - (long)gExcursionInfo.ErrIu;    //å»é™¤é›¶æ¼‚
         m_Iu = __IQsat(m_Iu,32767,-32767);
         m_Iu = (m_Iu * gCurSamp.Coff)>>15;
         m_Iu = __IQsat(m_Iu,32767,-32767);
 
-        m_Iw = (long)IwCur - (long)gExcursionInfo.ErrIw;    //È¥³ıÁãÆ¯
+        m_Iw = (long)IwCur - (long)gExcursionInfo.ErrIw;    //å»é™¤é›¶æ¼‚
         m_Iw = __IQsat(m_Iw,32767,-32767);
         m_Iw = (m_Iw * gCurSamp.Coff)>>15;
         m_Iw = __IQsat(m_Iw,32767,-32767);
@@ -425,7 +435,7 @@ void SVPWM_3ShuntGetPhaseCurrent(void)
         m_Iv = - m_Iu - m_Iw;
         m_Iv = __IQsat(m_Iv,32767,-32767);
 
-        // ¸øÍâ²¿½Ó¿ÚÄ£¿é£¬Ë²Ê±Öµ...
+        // ç»™å¤–éƒ¨æ¥å£æ¨¡å—ï¼Œç¬æ—¶å€¼...
         gCurSamp.U = m_Iu;
         gCurSamp.V = m_Iv;
         gCurSamp.W = m_Iw;
@@ -436,12 +446,12 @@ void SVPWM_3ShuntGetPhaseCurrent(void)
         IwCur = (int)(ADC_IW - (Uint)32768);
 
         // eg,751, then 751 >> 4 = 46. ~ 37mV.
-        m_Iv = (long)IvCur - (long)gExcursionInfo.ErrIv;    //È¥³ıÁãÆ¯
+        m_Iv = (long)IvCur - (long)gExcursionInfo.ErrIv;    //å»é™¤é›¶æ¼‚
         m_Iv = __IQsat(m_Iv,32767,-32767);
         m_Iv = (m_Iv * gCurSamp.Coff)>>15;
         m_Iv = __IQsat(m_Iv,32767,-32767);
 
-        m_Iw = (long)IwCur - (long)gExcursionInfo.ErrIw;    //È¥³ıÁãÆ¯
+        m_Iw = (long)IwCur - (long)gExcursionInfo.ErrIw;    //å»é™¤é›¶æ¼‚
         m_Iw = __IQsat(m_Iw,32767,-32767);
         m_Iw = (m_Iw * gCurSamp.Coff)>>15;
         m_Iw = __IQsat(m_Iw,32767,-32767);
@@ -449,7 +459,7 @@ void SVPWM_3ShuntGetPhaseCurrent(void)
         m_Iu = - m_Iv - m_Iw;
         m_Iu = __IQsat(m_Iu,32767,-32767);
 
-        // ¸øÍâ²¿½Ó¿ÚÄ£¿é£¬Ë²Ê±Öµ...
+        // ç»™å¤–éƒ¨æ¥å£æ¨¡å—ï¼Œç¬æ—¶å€¼...
         gCurSamp.U = m_Iu;
         gCurSamp.V = m_Iv;
         gCurSamp.W = m_Iw;
@@ -459,7 +469,7 @@ void SVPWM_3ShuntGetPhaseCurrent(void)
     break;
     }
 
-    //ÔË·Å·´ÏòÊä³ö£¬ËùÒÔÈ¡·´²Ù×÷
+    //è¿æ”¾åå‘è¾“å‡ºï¼Œæ‰€ä»¥å–åæ“ä½œ
     gCurSamp.U = m_Iu;
     gCurSamp.V = m_Iv;
     gCurSamp.W = m_Iw;

@@ -5,6 +5,8 @@
 #include "canfd.h"
 #include "motor_ctrl.h"
 
+extern uint16_t g_need_reboot;
+
 #define ATTR_R      0x01
 #define ATTR_W      0x02
 #define ATTR_RW     0x03
@@ -36,7 +38,6 @@ typedef struct {
     uint16_t ex_encoder_offset;
     uint16_t is_calibrated;
     uint16_t firmware_version;
-    uint16_t hardware_version;
 }ODObjs_t;
 
 extern ODObjs_t ODObjs;
@@ -46,5 +47,6 @@ uint16_t OD_read(uint16_t idx, uint16_t *data);
 uint16_t OD_write_1(uint16_t idx, uint16_t *data);
 uint16_t OD_write_2(uint16_t idx, uint16_t *data);
 uint16_t OD_write_4(uint16_t idx, uint16_t *data);
+void OD_check_sn(void);
 
 #endif

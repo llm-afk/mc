@@ -46,7 +46,8 @@ int MC_controlword_update(void)
         }
         case CW_CMD_ERROR_RESET: // 错误清除
         {
-            ODObjs.error_code = 0;
+            // 只允许清除普通软故障，必须保留 SN锁 和 编码器未标定锁
+            ODObjs.error_code &= (ERR_NO_SN | ERR_ENC_CALIB);
             // 【FIX】如果电机已经停稳，允许通过复位指令回到 INIT 重新待命
             if(motor_ctrl.state == STOPPED) 
             {
@@ -57,7 +58,11 @@ int MC_controlword_update(void)
         }
         case CW_CMD_DEV_ENCODER_CALIB: // 编码器校准
         {
-            motor_ctrl.state = ENCODER_CALIBRATE;
+            if(!HAS_ERR(ERR_NO_SN))
+            {
+                clr_err(ERR_ENC_MISSING);
+                motor_ctrl.state = ENCODER_CALIBRATE;
+            }
             break;
         }
         default:
@@ -303,6 +308,15 @@ float i2t_acc = 0.0f;
  */
 void info_collect_loop(void)
 {
+    if(g_need_reboot)
+    {
+        static uint16_t reboot_delay = 0;
+        if(++reboot_delay > 10) // 100ms (10 * 10ms loop period)
+        {
+            ResetDSP();
+        }
+    }
+
     static float board_temp_filt;
     static float motor_temp_filt;
     static uint16_t temp_filt_inited = 0;

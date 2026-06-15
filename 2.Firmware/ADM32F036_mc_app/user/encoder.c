@@ -243,6 +243,10 @@ uint16_t encoder_calibrate(void)
     static uint16_t state = 0;
     static uint16_t enc_degree_raw_start = 0;
     static int16_t  mech_dir = 1; 
+    static uint16_t enc_calib_min = 0;
+    static uint16_t enc_calib_max = 0;
+    static uint16_t ex_calib_min = 0;
+    static uint16_t ex_calib_max = 0;
 
     #define CALIB_CURRENT 1000 
 
@@ -308,8 +312,25 @@ uint16_t encoder_calibrate(void)
         {
             Iq = 0; Id = CALIB_CURRENT;
             static int16_t first_raw_val = 0;
-            if(cnt == 1) first_raw_val = encoder.enc_degree_raw_reversed;
+            if(cnt == 1)
+            {
+                first_raw_val = encoder.enc_degree_raw_reversed;
+                enc_calib_min = first_raw_val;
+                enc_calib_max = first_raw_val;
+                ex_calib_min = encoder.ex_enc_degree_raw;
+                ex_calib_max = encoder.ex_enc_degree_raw;
+            }
             
+
+            // track both encoder value ranges for magnet missing detection
+            {
+                uint16_t val = encoder.enc_degree_raw_reversed;
+                uint16_t ex_val = encoder.ex_enc_degree_raw;
+                if(val < enc_calib_min) enc_calib_min = val;
+                if(val > enc_calib_max) enc_calib_max = val;
+                if(ex_val < ex_calib_min) ex_calib_min = ex_val;
+                if(ex_val > ex_calib_max) ex_calib_max = ex_val;
+            }
             if(cnt <= 4096)
             {
                 if((cnt - 1) % 8 == 0)
@@ -350,8 +371,25 @@ uint16_t encoder_calibrate(void)
         {
             Iq = 0; Id = CALIB_CURRENT;
             static int16_t first_raw_val = 0;
-            if(cnt == 1) first_raw_val = encoder.enc_degree_raw_reversed;
+            if(cnt == 1)
+            {
+                first_raw_val = encoder.enc_degree_raw_reversed;
+                enc_calib_min = first_raw_val;
+                enc_calib_max = first_raw_val;
+                ex_calib_min = encoder.ex_enc_degree_raw;
+                ex_calib_max = encoder.ex_enc_degree_raw;
+            }
             
+
+            // track both encoder value ranges for magnet missing detection
+            {
+                uint16_t val = encoder.enc_degree_raw_reversed;
+                uint16_t ex_val = encoder.ex_enc_degree_raw;
+                if(val < enc_calib_min) enc_calib_min = val;
+                if(val > enc_calib_max) enc_calib_max = val;
+                if(ex_val < ex_calib_min) ex_calib_min = ex_val;
+                if(ex_val > ex_calib_max) ex_calib_max = ex_val;
+            }
             if(cnt <= 4096)
             {
                 if((cnt - 1) % 8 == 0)
@@ -380,6 +418,16 @@ uint16_t encoder_calibrate(void)
         case 6: // 计算线性化表
         {
             Iq = 0; Id = 0; 
+
+            // magnet missing check: both encoders range should exceed half turn (8192)
+            // if any range too small, magnet is not installed, only noise signal
+            if((enc_calib_max - enc_calib_min) < 8192 || (ex_calib_max - ex_calib_min) < 8192)
+            {
+                set_err(ERR_ENC_MISSING);
+                state = 0;
+                cnt = 0;
+                return 0;
+            }
             int32_t sum_error = 0;
             static int16_t smooth_buf[512]; 
 

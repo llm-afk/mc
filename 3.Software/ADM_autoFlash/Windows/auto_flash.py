@@ -153,7 +153,7 @@ def check_hw(fast_mode=False):
                 is_physical = False
 
         return hw_ok, jt_ok, is_physical
-    except: return False, False, False
+    except Exception: return False, False, False
 
 # ============================================================
 # 烧录流程
@@ -188,8 +188,8 @@ def flash_production(ccxml, boot_pattern, boot_addr, app_pattern, app_addr):
     # 构建 DSLite 烧录命令：-e 表示全片擦除，-v 表示校验，-u 表示烧录完复位并运行
     cmd = [DSLITE, "flash", f"--config={ccxml}", "-e", "-v", "-f", boot_arg, app_arg, "-u"]
     
-    p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, 
-                         text=True, encoding="gbk", errors="ignore")
+    p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                         text=True, encoding="gbk", errors="ignore", creationflags=0x08000000)
     
     # DSLite 初始化时会输出大量 XML 解析和寄存器映射信息，全部过滤掉
     NOISE_PREFIXES = (
@@ -215,7 +215,7 @@ def flash_production(ccxml, boot_pattern, boot_addr, app_pattern, app_addr):
         if "Program verification successful" in line:
             success = True
     p.wait()
-    return success
+    return success and (p.returncode == 0)
 
 # ============================================================
 # 探针断开检测

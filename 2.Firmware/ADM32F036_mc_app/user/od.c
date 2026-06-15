@@ -11,6 +11,20 @@ typedef struct {
     int (*update_func)(void);
 } OD_entry_t;
 
+uint16_t g_need_reboot = 0;
+
+static int SN_update_callback(void)
+{
+    g_need_reboot = 1;
+    return 0;
+}
+
+static int ResetDSP_callback(void)
+{
+    ResetDSP();
+    return 0;
+}
+
 static const OD_entry_t ODList[] = 
 {
     {0x2000, &ODObjs.error_code,                2, ATTR_RAM | ATTR_R,  NULL},
@@ -22,9 +36,9 @@ static const OD_entry_t ODList[] =
     {0x2007, &ODObjs.sn_s3,                     4, ATTR_ROM | ATTR_RW,  NULL},
     {0x2008, &ODObjs.sn_s4,                     4, ATTR_ROM | ATTR_RW,  NULL},
     {0x2009, &ODObjs.sn_s5,                     4, ATTR_ROM | ATTR_RW,  NULL},
-    {0x200A, &ODObjs.sn_s6,                     4, ATTR_ROM | ATTR_RW,  NULL},
+    {0x200A, &ODObjs.sn_s6,                     4, ATTR_ROM | ATTR_RW,  SN_update_callback},
     
-    {0x2040, &ODObjs.node_id,                   1, ATTR_ROM | ATTR_RW, ResetDSP},  
+    {0x2040, &ODObjs.node_id,                   1, ATTR_ROM | ATTR_RW, ResetDSP_callback},  
 
     {0x2043, &ODObjs.heartbeat_Producer_enable, 2, ATTR_ROM | ATTR_RW, NULL},
     {0x2044, &ODObjs.heartbeat_consumer_enable, 2, ATTR_ROM | ATTR_RW, NULL},
@@ -37,7 +51,6 @@ static const OD_entry_t ODList[] =
     {0x2071, &ODObjs.ex_encoder_offset,         2, ATTR_ROM | ATTR_RW, NULL}, 
     {0x2072, &ODObjs.is_calibrated,             2, ATTR_ROM | ATTR_RW, NULL},
     {0x2100, &ODObjs.firmware_version,          2, ATTR_RAM | ATTR_R,  NULL},
-    {0x2103, &ODObjs.hardware_version,          2, ATTR_RAM | ATTR_R,  NULL},
 };
 
 static void dictionary_init(void)
@@ -66,7 +79,6 @@ static void dictionary_init(void)
     ODObjs.in_encoder_offset = 0;
     ODObjs.ex_encoder_offset = 0;
     ODObjs.firmware_version = SOFT_VERSION; 
-    ODObjs.hardware_version = 101;
 }
 
 /**
@@ -139,6 +151,37 @@ void OD_init(void)
 {
     ODObjsCount = sizeof(ODList) / sizeof(OD_entry_t);
     dictionary_init();
+}
+
+void OD_check_sn(void)
+{
+    // 没有sn码，报错
+    if(ODObjs.sn_s0 == 0 && ODObjs.sn_s1 == 0 && ODObjs.sn_s2 == 0 && 
+       ODObjs.sn_s3 == 0 && ODObjs.sn_s4 == 0 && ODObjs.sn_s5 == 0 && ODObjs.sn_s6 == 0)
+    {
+        ODObjs.error_code |= ERR_NO_SN;
+        return;
+    }
+
+    // 解析硬件版本段 (sn_s3)
+    // 根据规则，sn_s3是4个ASCII字符(ABCD)，在小端模式下：
+    // [7:0]   A位 (结构变动)
+    // [15:8]  B位 (芯片平台)
+    // [23:16] C位 (电机型号)
+    // [31:24] D位 (硬件版本)
+    uint16_t b_bit_platform = (ODObjs.sn_s3 >> 8) & 0xFF;
+    uint16_t c_bit_motor    = (ODObjs.sn_s3 >> 16) & 0xFF;
+    uint16_t d_bit_version  = (ODObjs.sn_s3 >> 24) & 0xFF;
+
+    // 要求适配：B=2 (ADM平台), C=2 (C2_xinzhi), D=1 (硬件版本1) -> "221"
+    if(b_bit_platform == '2' && c_bit_motor == '2' && d_bit_version == '1')
+    {
+        ODObjs.error_code &= ~ERR_NO_SN; // 校验通过，放行
+    }
+    else
+    {
+        ODObjs.error_code |= ERR_NO_SN;  // 不匹配本驱动器，锁定
+    }
 }
 
 uint16_t OD_read(uint16_t idx, uint16_t *data)
