@@ -1,5 +1,8 @@
-import subprocess, time, os, configparser, glob, re
+import subprocess, time, os, sys, configparser, glob, re
 from datetime import datetime
+
+# 确保工作目录在脚本所在目录（管理员提权后 CWD 会变成 System32）
+os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 # ============================================================
 # 加载配置
@@ -49,14 +52,77 @@ else:
         DSLITE = dslite_cfg
 
 # 3. 定位 DBGJTAG (优先找本地，本地没有就强制用系统，因为TI导出时常漏掉此文件)
-DBGTJAG = cfg.get("paths", "dbgjtag", fallback=fallback_dbgjtag)
+DBGJTAG = cfg.get("paths", "dbgjtag", fallback=fallback_dbgjtag)
 if local_base:
     local_dbgjtag = os.path.abspath(os.path.join(local_base, "ccs_base", "common", "uscif", "dbgjtag.exe"))
     if os.path.exists(local_dbgjtag):
-        DBGTJAG = local_dbgjtag
+        DBGJTAG = local_dbgjtag
 
 # XDSDFU 通常位于 dbgjtag 同级目录下的 xds110 文件夹内
-XDSDFU = os.path.join(os.path.dirname(DBGTJAG), "xds110", "xdsdfu.exe")
+XDSDFU = os.path.join(os.path.dirname(DBGJTAG), "xds110", "xdsdfu.exe")
+
+# ============================================================
+# XDS110 驱动检测与自动安装
+# ============================================================
+def is_admin():
+    try:
+        import ctypes as _ctypes
+        return _ctypes.windll.shell32.IsUserAnAdmin() != 0
+    except:
+        return False
+
+def xds110_driver_installed():
+    """检查 Windows 驱动仓库中是否已有 XDS110 驱动"""
+    try:
+        driver_store = os.path.join(
+            os.environ.get("SystemRoot", r"C:\Windows"),
+            "System32", "DriverStore", "FileRepository"
+        )
+        if not os.path.exists(driver_store):
+            return False
+        for entry in os.listdir(driver_store):
+            if "xds110" in entry.lower():
+                return True
+    except:
+        pass
+    return False
+
+def ensure_xds110_driver():
+    """确保 XDS110 驱动已安装；如未安装且当前无管理员权限则自动提权"""
+    if xds110_driver_installed():
+        return  # 驱动已安装，无需操作
+
+    if not is_admin():
+        log("检测到 XDS110 驱动未安装，正在请求管理员权限...", "INFO")
+        import ctypes as _ctypes
+        _ctypes.windll.shell32.ShellExecuteW(
+            None, "runas", sys.executable,
+            '"' + os.path.abspath(__file__) + '"', None, 1
+        )
+        sys.exit(0)
+
+    # 已获得管理员权限，执行驱动安装
+    log("正在安装 XDS110 驱动 (静默模式)...", "INFO")
+    dpinst = os.path.abspath("uniflash_windows/dpinst_64_eng.exe")
+    xds110_drv = os.path.abspath("uniflash_windows/ccs_base/emulation/windows/xds110_drivers")
+    icdi_drv   = os.path.abspath("uniflash_windows/ccs_base/emulation/windows/icdi_drivers")
+
+    if not os.path.exists(dpinst):
+        log(f"错误: 找不到 dpinst_64_eng.exe", "ERROR")
+        return
+
+    try:
+        subprocess.run([dpinst, "/SE", "/SW", "/SA", "/PATH", xds110_drv],
+                       capture_output=True, timeout=60, creationflags=0x08000000)
+        subprocess.run([dpinst, "/SE", "/SW", "/SA", "/PATH", icdi_drv],
+                       capture_output=True, timeout=60, creationflags=0x08000000)
+
+        if xds110_driver_installed():
+            log("XDS110 驱动安装成功", "SUCCESS")
+        else:
+            log("驱动安装可能未生效，请手工以管理员身份运行 uniflash_windows\\one_time_setup.bat", "WARN")
+    except Exception as e:
+        log(f"驱动安装失败: {e}", "ERROR")
 
 # ============================================================
 # 自动查找目标配置文件 (.ccxml)
@@ -122,10 +188,17 @@ def result_block(ok, msg1, msg2=""):
 # ============================================================
 def check_hw(fast_mode=False):
     try:
-        # 1. 检查仿真器 USB 连接
+        # 1. 检查仿真器 USB 连接（超时 1s，失败重试 1 次，避免 USB 繁忙时误判离线）
         if os.path.exists(XDSDFU):
-            hw = subprocess.run([XDSDFU, "-e"], capture_output=True, text=True, timeout=0.4, creationflags=0x08000000)
-            hw_ok = "Found 1" in hw.stdout or "Found 2" in hw.stdout
+            hw_ok = False
+            for attempt in range(2):
+                try:
+                    hw = subprocess.run([XDSDFU, "-e"], capture_output=True, text=True, timeout=1.0, creationflags=0x08000000)
+                    if "Found 1" in hw.stdout or "Found 2" in hw.stdout:
+                        hw_ok = True
+                        break
+                except Exception:
+                    pass
             if not hw_ok: return False, False, False
         else:
             # 如果找不到 xdsdfu，默认仿真器连接正常，交由 dbgjtag 检测
@@ -135,7 +208,7 @@ def check_hw(fast_mode=False):
         cmd_type = "pathlength" if fast_mode else "integrity"
         timeout_val = 0.5 if fast_mode else 1.2
         
-        jt = subprocess.run([DBGTJAG, "-f", "@xds110", "-S", cmd_type], capture_output=True, text=True, timeout=timeout_val, creationflags=0x08000000)
+        jt = subprocess.run([DBGJTAG, "-f", "@xds110", "-S", cmd_type], capture_output=True, text=True, timeout=timeout_val, creationflags=0x08000000)
         
         stdout_msg = (jt.stdout + jt.stderr).lower()
         jt_ok = "succeeded" in stdout_msg
@@ -243,29 +316,69 @@ def wait_unplug():
 # ============================================================
 def main():
     log("ADM32F03X 自动烧录脚本启动", "INFO")
-    log(f"当前使用的运行环境: [{env_mode}]", "INFO")
-    if not os.path.exists(CCXML):
-        log(f"警告: 找不到配置文件 {CCXML}，如果后续提示找不到目标配置，请检查此文件！", "ERROR")
-        
+    log(f"运行环境: {env_mode}", "INFO")
+
+    # --- 驱动检查 ---
+    ensure_xds110_driver()
+
+    # --- 工具链信息 ---
+    log(f"DSLite : {DSLITE}", "INFO")
+    log(f"dbgjtag: {DBGJTAG}", "INFO")
+    log(f"xdsdfu : {XDSDFU}", "INFO")
+
+    # --- 目标配置 ---
+    if os.path.exists(CCXML):
+        log(f"目标配置: {CCXML}", "INFO")
+    else:
+        log(f"警告: 找不到目标配置文件 {CCXML}", "WARN")
+
+    # --- 固件信息 ---
+    boot = resolve_file(BOOT_PATTERN)
+    app  = resolve_file(APP_PATTERN)
+
+    if boot:
+        log(f"Boot 固件: {os.path.basename(boot)}  版本: {extract_version(boot)}  地址: {BOOT_ADDR}", "INFO")
+    else:
+        log(f"错误: 未找到 Boot 固件 (匹配: {BOOT_PATTERN})", "ERROR")
+
+    if app:
+        log(f"App  固件: {os.path.basename(app)}   版本: {extract_version(app)}   地址: {APP_ADDR}", "INFO")
+    else:
+        log(f"错误: 未找到 App 固件 (匹配: {APP_PATTERN})", "ERROR")
+
+    # 等待 USB 枚举就绪，避免启动瞬间误报"未检测到仿真器"
+    time.sleep(0.5)
+
     state = None
+    seen = set()             # 每个等待状态只输出一次，不刷屏
+    no_probe_cnt = 0         # 防抖计数：连续多少次未检测到仿真器
+    NO_PROBE_DEBOUNCE = 8    # 连续 8 次 (~0.8s) 才报错，给 USB 足够恢复时间
     while True:
         hw, jt_ok, is_physical = check_hw(fast_mode=False)
-        
-        if not hw: 
+
+        if not hw:
+            no_probe_cnt += 1
+            if no_probe_cnt < NO_PROBE_DEBOUNCE:
+                time.sleep(0.1)
+                continue
             new_state = "NO_PROBE"
             msg = "未检测到仿真器 (Debug probe not found)"
             level = "ERROR"
-        elif not is_physical: 
+        elif not is_physical:
+            no_probe_cnt = 0
             new_state = "WAIT_BOARD"
-            msg = "请将探针压紧至目标板..."
+            msg = "等待探针接触目标板..."
             level = "INFO"
-        else: 
+        else:
+            no_probe_cnt = 0
             new_state = "READY"
             msg = "探针已接触，开始烧录..."
             level = "INFO"
 
-        if new_state != state: 
-            log(msg, level)
+        if new_state != state:
+            if new_state == "READY" or new_state not in seen:
+                log(msg, level)
+                seen.add(new_state)
             state = new_state
 
         if new_state == "READY":
@@ -275,10 +388,11 @@ def main():
                 result_block(True, "Boot + App 烧录成功并已启动", "请松开探针")
             else:
                 result_block(False, "烧录失败", "请重新压紧探针")
-            
+
             wait_unplug()
             state = None
-        
+            seen.clear()       # 新一轮烧录，重置
+
         time.sleep(0.1)
 
 if __name__ == "__main__":

@@ -388,7 +388,7 @@ void info_collect_loop(void)
     /* -------- I²t 算法高级热保护（堵转保护） -------- */
     const float dt = 0.01f; 
     const float t_trip_test = 30.0f;
-    const float t_rated = 28.0f;
+    const float t_rated = 20.0f; 
     const float t_trip_time = 10.0f;
     const float i2t_threshold = (t_trip_test * t_trip_test - t_rated * t_rated) * t_trip_time;
 
