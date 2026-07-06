@@ -372,18 +372,18 @@ void info_collect_loop(void)
         }
     }
 
-    // 【FIX】6. 欠压保护（移出 CAN 10秒盲区，确保硬件上电立刻处于保护监测中）
-    if(!(HAS_ERR(ERR_UNDER_VOLTAGE)) && ((gUDC.uDCFilter * 0.1f) < under_v_level))
-    {
-        motor_fault_shutdown(ERR_UNDER_VOLTAGE);
-    }
-    if(HAS_ERR(ERR_UNDER_VOLTAGE)) // 【修复括号补齐】
-    {
-        if((gUDC.uDCFilter * 0.1f) > under_v_level + 2.0f)
-        {
-            motor_fault_recover(ERR_UNDER_VOLTAGE);
-        }
-    }
+    // // 【FIX】6. 欠压保护（移出 CAN 10秒盲区，确保硬件上电立刻处于保护监测中）
+    // if(!(HAS_ERR(ERR_UNDER_VOLTAGE)) && ((gUDC.uDCFilter * 0.1f) < under_v_level))
+    // {
+    //     motor_fault_shutdown(ERR_UNDER_VOLTAGE);
+    // }
+    // if(HAS_ERR(ERR_UNDER_VOLTAGE)) // 【修复括号补齐】
+    // {
+    //     if((gUDC.uDCFilter * 0.1f) > under_v_level + 2.0f)
+    //     {
+    //         motor_fault_recover(ERR_UNDER_VOLTAGE);
+    //     }
+    // }
 
     /* -------- I²t 算法高级热保护（堵转保护） -------- */
     const float dt = 0.01f; 

@@ -132,14 +132,14 @@ void led_loop(void)
                     lpg_set_pattern(&lpg.units[0], led_err_motor_over_temp, ARRAY_SIZE(led_err_motor_over_temp));
                 }
             }
-            else if(ODObjs.error_code & ERR_UNDER_VOLTAGE)
-            {
-                led_state = LED_ERR_UNDER_VOLTAGE;
-                if(led_state != led_state_last)
-                {
-                    lpg_set_pattern(&lpg.units[0], led_err_under_voltage, ARRAY_SIZE(led_err_under_voltage));
-                }
-            }
+            // else if(ODObjs.error_code & ERR_UNDER_VOLTAGE)
+            // {
+            //     led_state = LED_ERR_UNDER_VOLTAGE;
+            //     if(led_state != led_state_last)
+            //     {
+            //         lpg_set_pattern(&lpg.units[0], led_err_under_voltage, ARRAY_SIZE(led_err_under_voltage));
+            //     }
+            // }
             else if(canfd_buf_off_flag)
             {
                 led_state = LED_ERR_CAN_BUS_OFF;
