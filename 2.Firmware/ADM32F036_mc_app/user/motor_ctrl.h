@@ -39,16 +39,16 @@ typedef enum {
 #define CW_CMD_DEV_ENCODER_CALIB            0xF1
 
 typedef struct {
-    motor_mode_t state;   // æŽ§åˆ¶æ¨¡å¼çŠ¶æ€
+    motor_mode_t state;   // ¿ØÖÆÄ£Ê½×´Ì¬
 
-    int32_t degree_ref_q14;   // è¾“å‡ºç«¯ç›®æ ‡è§’åº¦ rad
-    int32_t velocity_ref_q14; // è¾“å‡ºç«¯ç›®æ ‡é€Ÿåº¦ rad/s
-    int32_t torque_ref_q14;   // mitå‰é¦ˆåŠ›çŸ© nm
+    int32_t degree_ref_q14;   // Êä³ö¶ËÄ¿±ê½Ç¶È rad
+    int32_t velocity_ref_q14; // Êä³ö¶ËÄ¿±êËÙ¶È rad/s
+    int32_t torque_ref_q14;   // mitÇ°À¡Á¦¾Ø nm
     uint32_t Kp_q14;          // mit_kp 0.01
     uint32_t Kd_q14;          // mit_kd 0.01
 
-    int32_t board_temp_q14;   // é©±åŠ¨å™¨æ¸©åº¦
-    int32_t motor_temp_q14;   // ç”µæœºæ¸©åº¦
+    int32_t board_temp_q14;   // Çý¶¯Æ÷ÎÂ¶È
+    int32_t motor_temp_q14;   // µç»úÎÂ¶È
 }motor_ctrl_t;
 
 extern motor_ctrl_t motor_ctrl;
@@ -62,5 +62,12 @@ int MC_controlword_update(void);
 
 void set_err(tErrorCode err);
 void clr_err(tErrorCode err);
+
+// Stall test mode: 0=normal, 1=Iq cmd -> Id axis, motor locked, windings heated by DC
+#define STALL_TEST_MODE             0
+
+// Winding estimated resistance [Ohm] + temperature [degC]
+extern float g_r_filt;
+extern float g_temp;
 
 #endif
