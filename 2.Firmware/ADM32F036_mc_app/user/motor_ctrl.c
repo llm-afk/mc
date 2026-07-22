@@ -39,7 +39,7 @@ static void estimate_phase_resistance(void)
     float elec_speed = (float)encoder.velocity_q14 * (1.0f / 16384.0f)
                      * (float)GEAR_RATIO * (float)MOTOR_POLE_PAIRS;
 
-    if (I2 > 25.0f && fabsf(elec_speed) < 50.0f)
+    if (I2 > 100.0f && fabsf(elec_speed) < 10.0f)
     {
         // Read actual phase voltage from PWM compare registers (FOC mode)
         float prd = (float)EPwm2Regs.TBPRD;
