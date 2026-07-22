@@ -39,7 +39,21 @@ static void estimate_phase_resistance(void)
     float elec_speed = (float)encoder.velocity_q14 * (1.0f / 16384.0f)
                      * (float)GEAR_RATIO * (float)MOTOR_POLE_PAIRS;
 
+    #define STALL_HOLD_TICKS  20   // 200ms @ 100Hz
+    static uint16_t stall_ticks = 0;
+
+    // 管理堵转条件累计计数器
     if (I2 > 100.0f && fabsf(elec_speed) < 10.0f)
+    {
+        if (stall_ticks < STALL_HOLD_TICKS) stall_ticks++;
+    }
+    else
+    {
+        stall_ticks = 0;
+    }
+
+    // 累计满 200ms 才估算，否则始终降温
+    if (stall_ticks >= STALL_HOLD_TICKS)
     {
         // Read actual phase voltage from PWM compare registers (FOC mode)
         float prd = (float)EPwm2Regs.TBPRD;
