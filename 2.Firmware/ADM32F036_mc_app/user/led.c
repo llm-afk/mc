@@ -89,6 +89,14 @@ void led_loop(void)
                 set_err(ERR_ENC_CALIB);
             }
         }
+        else if(ODObjs.error_code & ERR_ADC_SELFTEST) //adc×Ô¼ì´íÎó
+        {
+            led_state = LED_ERR_UNCALIBRATED;
+            if(led_state != led_state_last)
+            {
+                lpg_set_pattern(&lpg.units[0], led_err_uncalibrated, ARRAY_SIZE(led_err_uncalibrated));
+            }
+        }
         else if(cnt <= 1000)
         {
             cnt++;

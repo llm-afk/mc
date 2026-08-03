@@ -4,32 +4,33 @@
 
 
 int  gSendToFunctionDataBuff[MOTOR_TO_FUNCTION_DATA_NUM];
-Uint gSendToMotorDataBuff[FUNCTION_TO_MOTOR_DATA_NUM];				//´«µİ¸øĞÔÄÜÄ£¿éµÄÊı×é
+Uint gSendToMotorDataBuff[FUNCTION_TO_MOTOR_DATA_NUM];				//ä¼ é€’ç»™æ€§èƒ½æ¨¡å—çš„æ•°ç»„
 
-INV_STRUCT 				gInvInfo;		//±äÆµÆ÷ĞÅÏ¢
-MOTOR_STRUCT 			gMotorInfo;		//µç»úĞÅÏ¢
+INV_STRUCT 				gInvInfo;		//å˜é¢‘å™¨ä¿¡æ¯
+MOTOR_STRUCT 			gMotorInfo;		//ç”µæœºä¿¡æ¯
 
-RUN_STATUS_STRUCT 		gMainStatus;	//Ö÷ÔËĞĞ×´Ì¬
-BASE_COMMAND_STRUCT		gMainCmd;		//Ö÷ÃüÁî
+RUN_STATUS_STRUCT 		gMainStatus;	//ä¸»è¿è¡ŒçŠ¶æ€
+BASE_COMMAND_STRUCT		gMainCmd;		//ä¸»å‘½ä»¤
 
 /************************************************************/
-/**********ÒÔÏÂÎªºÍµç»ú¿ØÖÆÏà¹ØÉè¶¨²ÎÊı¶¨Òå******************/
-BASE_PAR_STRUCT			gBasePar;		//»ù±¾ÔËĞĞ²ÎÊı
-COM_PAR_INFO_STRUCT		gComPar;		//¹«¹²²ÎÊı
-VF_INFO_STRUCT			gVFPar;			//VF²ÎÊı
+/**********ä»¥ä¸‹ä¸ºå’Œç”µæœºæ§åˆ¶ç›¸å…³è®¾å®šå‚æ•°å®šä¹‰******************/
+BASE_PAR_STRUCT			gBasePar;		//åŸºæœ¬è¿è¡Œå‚æ•°
+COM_PAR_INFO_STRUCT		gComPar;		//å…¬å…±å‚æ•°
+VF_INFO_STRUCT			gVFPar;			//VFå‚æ•°
 
-ADC_STRUCT				gADC;			//ADCÊı¾İ²É¼¯½á¹¹
-UDC_STRUCT				gUDC;			//Ä¸ÏßµçÑ¹Êı¾İ
+ADC_STRUCT				gADC;			//ADCæ•°æ®é‡‡é›†ç»“æ„
+UDC_STRUCT				gUDC;			//æ¯çº¿ç”µå‹æ•°æ®
 IUVW_SAMPLING_STRUCT	gCurSamp;
-UVW_STRUCT				gIUVW;			//¶¨×ÓÈıÏà×ø±êÖáµçÁ÷
-ALPHABETA_STRUCT		gIAlphBeta;		//¶¨×ÓÁ½Ïà×ø±êÖáµçÁ÷
-MT_STRUCT				gIMT;			//MTÖáÏµÏÂµÄµçÁ÷
-AMPTHETA_STRUCT			gIAmpTheta;		//¼«×ø±ê±íÊ¾µÄµçÁ÷
+UVW_STRUCT				gIUVW;			//å®šå­ä¸‰ç›¸åæ ‡è½´ç”µæµ
+ALPHABETA_STRUCT		gIAlphBeta;		//å®šå­ä¸¤ç›¸åæ ‡è½´ç”µæµ
+MT_STRUCT				gIMT;			//MTè½´ç³»ä¸‹çš„ç”µæµ
+AMPTHETA_STRUCT			gIAmpTheta;		//æåæ ‡è¡¨ç¤ºçš„ç”µæµ
 LINE_CURRENT_STRUCT		gLineCur;	
-ANGLE_STRUCT			gPhase;			//½Ç¶È½á¹¹
-JUDGE_POWER_LOW			gLowPower;		//ÉÏµç»º³åÅĞ¶ÏÊ¹ÓÃÊı¾İ½á¹¹
-JUDGE_ACC_DEC_STRUCT	gSpeedFlag;		//ÅĞ¶Ï¼Ó¼õËÙ±êÖ¾µÄ½á¹¹
-CUR_EXCURSION_STRUCT	gExcursionInfo;	//¼ì²âÁãÆ¯Ê¹ÓÃµÄ½á¹¹
+ANGLE_STRUCT			gPhase;			//è§’åº¦ç»“æ„
+JUDGE_POWER_LOW			gLowPower;		//ä¸Šç”µç¼“å†²åˆ¤æ–­ä½¿ç”¨æ•°æ®ç»“æ„
+JUDGE_ACC_DEC_STRUCT	gSpeedFlag;		//åˆ¤æ–­åŠ å‡é€Ÿæ ‡å¿—çš„ç»“æ„
+CUR_EXCURSION_STRUCT	gExcursionInfo;	//æ£€æµ‹é›¶æ¼‚ä½¿ç”¨çš„ç»“æ„
+int                     g_adc_offset_ready = 0;  // ADCé›¶åé‡‡é›†å®Œæˆæ ‡å¿—
 DEAD_BAND_STRUCT		gDeadBand;
 
 CBC_PROTECT_STRUCT      gCBCProtect;
@@ -40,12 +41,12 @@ FC_CAL_STRUCT			gFcCal;
 OVER_UDC_CTL_STRUCT		gOvUdc;
 DC_BRAKE_STRUCT         gDCBrake;
 OUT_VOLT_STRUCT			gOutVolt;
-Uint					gRatio;			//µ÷ÖÆÏµÊı
+Uint					gRatio;			//è°ƒåˆ¶ç³»æ•°
 PWM_OUT_STRUCT			gPWM;
 
 SYN_PWM_STRUCT			gSynPWM;
 UV_AMP_COFF_STRUCT		gUVCoff;
-FEISU_STRUCT			gFeisu;			//×ªËÙ¸ú×ÙÓÃ±äÁ¿
+FEISU_STRUCT			gFeisu;			//è½¬é€Ÿè·Ÿè¸ªç”¨å˜é‡
 CPU_TIME_STRUCT			gDSPActiveTime;
 
 PM_INIT_POSITION        gIPMInitPos;
@@ -54,7 +55,7 @@ SHORT_GND_STRUCT        gShortGnd;
 BEMF_STRUCT             gBemf;
 PG_STRUCT               gPG;
 //---------------------------------------------------------------
-//µç»ú¿ØÖÆÄ£¿éºÍ¿ØÖÆÄ£¿éµÄ½»»¥±í
+//ç”µæœºæ§åˆ¶æ¨¡å—å’Œæ§åˆ¶æ¨¡å—çš„äº¤äº’è¡¨
 //---------------------------------------------------------------
 Uint MotorPWMRandom;
 Uint MotorSpeedScaling2ONKB10;
@@ -100,20 +101,20 @@ int ActualPower;
 
 Uint * const gSendToMotorTable[FUNCTION_TO_MOTOR_DATA_NUM] = 
 {
-	(Uint *)&gMainCmd.Command.all,	(Uint *)&gMainCmd.FreqSet,			//0¡¢1
-	(Uint *)&gMainCmd.VCTorqueLim,	&DataRsrd,		                    //2¡¢3
-	&gBasePar.FcSet,				&gBasePar.UpFreq,					//4¡¢5
+	(Uint *)&gMainCmd.Command.all,	(Uint *)&gMainCmd.FreqSet,			//0ã€1
+	(Uint *)&gMainCmd.VCTorqueLim,	&DataRsrd,		                    //2ã€3
+	&gBasePar.FcSet,				&gBasePar.UpFreq,					//4ã€5
 	&gVFPar.VFLineType,													//6
-	&gBasePar.MaxFreq,				&gMotorInfo.Power,					//7¡¢8
+	&gBasePar.MaxFreq,				&gMotorInfo.Power,					//7ã€8
 	&MotorPWMModeForNoise,											    //9
 	&gMotorInfo.Power,                      							//10
-	&gMotorInfo.Votage,				&gMotorInfo.CurrentGet,				//11¡¢12
+	&gMotorInfo.Votage,				&gMotorInfo.CurrentGet,				//11ã€12
 	&gMotorInfo.Frequency,												//13
-	&IdMaxSet,                      &DataRsrd,        	                //14¡¢15
-	&gInvInfo.InvUpUDCCoef,			&gInvInfo.InvLowUDCCoef,			//16¡¢17
-	&gComPar.SubCommand.all,		&ReserdData,                        //18¡¢19
-	&gInvInfo.UDCCoff,				&gInvInfo.CurrentCoff,              //20¡¢21
-	&MotorPWMRandom, 	    		&IqFWLimit,			                //22¡¢23
+	&IdMaxSet,                      &DataRsrd,        	                //14ã€15
+	&gInvInfo.InvUpUDCCoef,			&gInvInfo.InvLowUDCCoef,			//16ã€17
+	&gComPar.SubCommand.all,		&ReserdData,                        //18ã€19
+	&gInvInfo.UDCCoff,				&gInvInfo.CurrentCoff,              //20ã€21
+	&MotorPWMRandom, 	    		&IqFWLimit,			                //22ã€23
 	&gADC.DelaySet,                         							//24
 	&DCBrakeCur,                     				//25
 
@@ -145,10 +146,10 @@ Uint * const gSendToMotorTable[FUNCTION_TO_MOTOR_DATA_NUM] =
 Uint gSoftVersion = SOFT_VERSION;
 Uint * const gSendToFuncTable[MOTOR_TO_FUNCTION_DATA_NUM] = 
 {
-	&gMainStatus.StatusWord.all,	&gMainStatus.ErrorCode,				//0¡¢1
-	(Uint *)&gLineCur.ErrorShow,	(Uint *)&gMainCmd.FreqPreWs,				//2¡¢3
-	(Uint *)&gUDC.uDCFilter,		(Uint *)&gLineCur.CurPer,			//4¡¢5
-	(Uint *)&gOutVolt.VoltApply,	&gTemperature.Temp,					//6¡¢7
-	(Uint *)&gMainStatus.RunStep,	(Uint *)&pm_iq_show,				//8¡¢9
+	&gMainStatus.StatusWord.all,	&gMainStatus.ErrorCode,				//0ã€1
+	(Uint *)&gLineCur.ErrorShow,	(Uint *)&gMainCmd.FreqPreWs,				//2ã€3
+	(Uint *)&gUDC.uDCFilter,		(Uint *)&gLineCur.CurPer,			//4ã€5
+	(Uint *)&gOutVolt.VoltApply,	&gTemperature.Temp,					//6ã€7
+	(Uint *)&gMainStatus.RunStep,	(Uint *)&pm_iq_show,				//8ã€9
 	(Uint *)&pm_omg_show,			&gInvInfo.InvCurrent
 };

@@ -192,7 +192,7 @@ interrupt void canfd_IsrHander1(void)
                 memcpy(canFrame_temp.data, CanfdRegs.RBUF.DATA, ((canFrame_temp.len + 1) >> 1));
                 ringbuffer_in(&canFrameRxRingbuffer, &canFrame_temp, sizeof(canFrame_t));
 
-                canfd_timeout_cnt = 0; // 收到帧数据，清除canfd通信断开的计数
+                //canfd_timeout_cnt = 0; // 收到帧数据，清除canfd通信断开的计数
             }
             CanfdRegs.TCTRL.bit.RREL = 1;
         }
@@ -253,6 +253,7 @@ static void parse_frame(canFrame_t *frame)
             motor_ctrl.torque_ref_q14   = (int32_t)(*(float*)&frame->data[4] * 16384.0f); 
             motor_ctrl.Kp_q14           = ((uint32_t)(*(uint16_t*)&frame->data[6])) * 16400; 
             motor_ctrl.Kd_q14           = ((uint32_t)(*(uint16_t*)&frame->data[7])) * 16400;
+            canfd_timeout_cnt = 0;
 
             // 数据上报
             frame->id = MSG_ID_TPDO_5 + m_node_id;    
@@ -284,6 +285,7 @@ static void parse_frame(canFrame_t *frame)
             motor_ctrl.torque_ref_q14   = (int32_t)(*(float*)&frame->data[4] * 16384.0f); 
             motor_ctrl.Kp_q14           = ((uint32_t)(*(uint16_t*)&frame->data[6])) * 16400; 
             motor_ctrl.Kd_q14           = ((uint32_t)(*(uint16_t*)&frame->data[7])) * 16400;
+            canfd_timeout_cnt = 0;
 
             // 数据上报
             frame->id = MSG_ID_TPDO_5 + m_node_id;    

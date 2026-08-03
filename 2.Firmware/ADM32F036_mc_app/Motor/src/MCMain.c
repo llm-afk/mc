@@ -32,6 +32,7 @@ void CalDeadBandComp(void);
 void SoftPWMProcess(void);
 void CalOutputPhase(void);
 void GetCurrentExcursion(void);
+int  check_adc_offset_threshold(void);
 
 void SoftWareErrorDeal(void);					
 void CalUdcLimitIT(void);
@@ -47,7 +48,7 @@ int IDFadeOverCnt;
 int SHORT_GND_PERIOD = 5000;    // 10K SF
 
 /************************************************************
-ĞÔÄÜÄ£¿é³õÊ¼»¯³ÌĞò£ºÖ÷Ñ­»·Ç°³õÊ¼»¯ĞÔÄÜ²¿·ÖµÄ±äÁ¿(ËùÓĞµÈÓÚ0µÄ±äÁ¿ÎŞĞè³õÊ¼»¯)
+æ€§èƒ½æ¨¡å—åˆå§‹åŒ–ç¨‹åºï¼šä¸»å¾ªç¯å‰åˆå§‹åŒ–æ€§èƒ½éƒ¨åˆ†çš„å˜é‡(æ‰€æœ‰ç­‰äº0çš„å˜é‡æ— éœ€åˆå§‹åŒ–)
 ************************************************************/
 void  InitForMotorApp(void)
 {
@@ -72,9 +73,9 @@ void  InitForMotorApp(void)
 }
 
 /************************************************************
-Ö÷³ÌĞòµÄµ¥2msÑ­»·£ºÓÃÓÚÖ´ĞĞµç»ú¿ØÖÆ³ÌĞò
-Ë¼Â·£ºÊı¾İÊäÈë->Êı¾İ×ª»»->¿ØÖÆËã·¨->¿ØÖÆÊä³ö->×ÔÎÒ±£»¤
-Ö´ĞĞÊ±¼ä£º²»±»ÖĞ¶Ï´ò¶ÏµÄÇé¿öÏÂÔ¼120us
+ä¸»ç¨‹åºçš„å•2mså¾ªç¯ï¼šç”¨äºæ‰§è¡Œç”µæœºæ§åˆ¶ç¨‹åº
+æ€è·¯ï¼šæ•°æ®è¾“å…¥->æ•°æ®è½¬æ¢->æ§åˆ¶ç®—æ³•->æ§åˆ¶è¾“å‡º->è‡ªæˆ‘ä¿æŠ¤
+æ‰§è¡Œæ—¶é—´ï¼šä¸è¢«ä¸­æ–­æ‰“æ–­çš„æƒ…å†µä¸‹çº¦120us
 ************************************************************/
 void SystemLeve2msMotor(void)
 {
@@ -82,7 +83,7 @@ void SystemLeve2msMotor(void)
 	ParameterChange();
 	PMFluxWeaking();
 
-	// CalCarrierWaveFreq(); // ¶¯Ì¬ĞŞ¸ÄÔØ²¨ÆµÂÊ
+	// CalCarrierWaveFreq(); // åŠ¨æ€ä¿®æ”¹è½½æ³¢é¢‘ç‡
 	CalStepAngle();
 	RunCaseDeal();
 							
@@ -104,7 +105,7 @@ void SystemLeve2msMotor(void)
 }
 
 /************************************************************
-Ö÷³ÌĞò0.5msÑ­»·£ºÓÃÓÚÖ´ĞĞĞèÒª¿ìËÙË¢ĞÂµÄ³ÌĞò£¬ÒªÇó³ÌĞò·Ç³£¼ò¶Ì
+ä¸»ç¨‹åº0.5mså¾ªç¯ï¼šç”¨äºæ‰§è¡Œéœ€è¦å¿«é€Ÿåˆ·æ–°çš„ç¨‹åºï¼Œè¦æ±‚ç¨‹åºéå¸¸ç®€çŸ­
 ************************************************************/
 void SystemLeve05msMotor(void)
 {
@@ -118,7 +119,7 @@ void SystemLeve05msMotor(void)
 
 
 /*************************************************************
-²ÎÊı¼ÆËã³ÌĞò£ºÍê³É²ÎÊı×ª»»¡¢ÔËĞĞ²ÎÊı×¼±¸µÈ¹¤×÷
+å‚æ•°è®¡ç®—ç¨‹åºï¼šå®Œæˆå‚æ•°è½¬æ¢ã€è¿è¡Œå‚æ•°å‡†å¤‡ç­‰å·¥ä½œ
 *************************************************************/
 void ParameterChange(void)		
 {
@@ -128,7 +129,7 @@ void ParameterChange(void)
 	// gInvInfo.InvVoltageType
 	gInvInfo.InvVolt = MOTOR_RATED_VOL;
 
-	// È·¶¨¹ıÑ¹ºÍÇ·Ñ¹µãµÄ´óĞ¡...
+	// ç¡®å®šè¿‡å‹å’Œæ¬ å‹ç‚¹çš„å¤§å°...
 	// LowDc = 200V
 	// InvUpUDC = OverDc = 390V
 	gInvInfo.InvLowUDC = gInvInfo.InvLowUDCCoef;
@@ -143,25 +144,25 @@ void ParameterChange(void)
     gInvInfo.BaseUdc = ((long)MOTOR_RATED_VOL * 960) >> 6;
 #endif
 
-	// ¹ıÑ¹Ê§ËÙµã 351V = gOvUdc.Limit...
+	// è¿‡å‹å¤±é€Ÿç‚¹ 351V = gOvUdc.Limit...
 	gOvUdc.Limit = OVER_DC_VOL_LIMIT;
 
-	// Éè¶¨¶î¶¨µçÁ÷£¬Êµ¼Ê²úÆ·¿ÉÒÔ¿¼ÂÇ½«ËüÉèÖÃÎª¹Ì¶¨Öµ£¬±Èµç»ú¶î¶¨µçÁ÷Ò»ÖÂ
+	// è®¾å®šé¢å®šç”µæµï¼Œå®é™…äº§å“å¯ä»¥è€ƒè™‘å°†å®ƒè®¾ç½®ä¸ºå›ºå®šå€¼ï¼Œæ¯”ç”µæœºé¢å®šç”µæµä¸€è‡´
 	gInvInfo.InvCurrent = MOTOR_RATED_CUR;
 
-	// gUDC.Coff = 9500, ´ú±í3.3V ~ 950V and with 0.1 DP
-	// »»ÉÏ2802x ºóÖ±½Ó½«gUDC.Coff ¸Ä³ÉÒ»¸ö¹Ì¶¨Öµ¼´¿É¡£
+	// gUDC.Coff = 9500, ä»£è¡¨3.3V ~ 950V and with 0.1 DP
+	// æ¢ä¸Š2802x åç›´æ¥å°†gUDC.Coff æ”¹æˆä¸€ä¸ªå›ºå®šå€¼å³å¯ã€‚
     // 443.3V, then 4433/
 	gUDC.Coff = MAX_DC_VOL_3_3V;
 
-	//ÉèÖÃµç»úµçÁ÷Ì«Ğ¡µÄ´¦Àí
+	//è®¾ç½®ç”µæœºç”µæµå¤ªå°çš„å¤„ç†
 	gMotorInfo.Current = gMotorInfo.CurrentGet;
 
-	// ¼ÆËãËÀÇøºÍËÀÇø²¹³¥²ÎÊı, Êµ¼Ê²úÆ·ÉèÖÃÎª¹Ì¶¨ 2us
+	// è®¡ç®—æ­»åŒºå’Œæ­»åŒºè¡¥å¿å‚æ•°, å®é™…äº§å“è®¾ç½®ä¸ºå›ºå®š 2us
     gDeadBand.DeadBand = DeadTimeInternal;
     gDeadBand.Comp     = DeadTimeCompInternal;
 
-	EALLOW;									//ÉèÖÃËÀÇøÊ±¼ä
+	EALLOW;									//è®¾ç½®æ­»åŒºæ—¶é—´
 	EPwm2Regs.DBFED = gDeadBand.DeadBand;
 	EPwm2Regs.DBRED = gDeadBand.DeadBand;
 	EPwm3Regs.DBFED = gDeadBand.DeadBand;
@@ -171,13 +172,13 @@ void ParameterChange(void)
 	EDIS;
 	
 	// 24.75A
-    // MAX_PEAK_CUR_3_3V = 414, ´ú±íµÄÊÇ 4.14A Peak. Rated is 2.0A
+    // MAX_PEAK_CUR_3_3V = 414, ä»£è¡¨çš„æ˜¯ 4.14A Peak. Rated is 2.0A
     // (4.14 / 2.0) * 2^12 = 8448,
     m_ULong = MAX_PEAK_CUR_3_3V_410;
     m_ULong = m_ULong / gMotorInfo.Current;
     gCurSamp.Coff = m_ULong;
 
-	//¼ÆËãÆµÂÊ±íÊ¾
+	//è®¡ç®—é¢‘ç‡è¡¨ç¤º
 #ifdef  FREQUENCY_CONTROL_01HZ
     gBasePar.FullFreq = ((long)gBasePar.MaxFreq * 10) + 2000;
 #else
@@ -186,13 +187,13 @@ void ParameterChange(void)
 
 	gMotorInfo.FreqPer = ((Ulong)gMotorInfo.Frequency <<15) / gBasePar.FullFreq;
 
-	//¼ÆËãÓÃÊµ¼ÊÖµ±íÊ¾µÄÔËĞĞÆµÂÊ
+	//è®¡ç®—ç”¨å®é™…å€¼è¡¨ç¤ºçš„è¿è¡Œé¢‘ç‡
 	m_UData = abs(gMainCmd.FreqSetApply);
 	gMainCmd.FreqReal = ((Ulong)m_UData * (Ulong)gBasePar.FullFreq) >> 15;
 }
 
 /************************************************************
- ¼ÆËãÔØ²¨ÆµÂÊ£ºÊäÈëgBasePar.FcSet£¬Êä³ögBasePar.FcSetApply
+ è®¡ç®—è½½æ³¢é¢‘ç‡ï¼šè¾“å…¥gBasePar.FcSetï¼Œè¾“å‡ºgBasePar.FcSetApply
  2ms Level...
 ************************************************************/
 void CalCarrierWaveFreq(void)
@@ -231,8 +232,8 @@ void CalCarrierWaveFreq(void)
 	   } 
 
 	   // 102, then 4000000 / 102 = 39215
-	   // means 24.38Hz,Ë®±Ãµç»ú´ó¸Å5×óÓÒ£¬ËùÒÔ 4000000 / 5 = 800000£¬ ¶ÔÓÃ50HZ. Æ«´ó
-	   // ¸Ä³É200000 / ke£¬ ÕâÑùKE=5Ê±ºò£¬50HZ ¿ªÊ¼Àø´Å¼õĞ¡µ½0
+	   // means 24.38Hz,æ°´æ³µç”µæœºå¤§æ¦‚5å·¦å³ï¼Œæ‰€ä»¥ 4000000 / 5 = 800000ï¼Œ å¯¹ç”¨50HZ. åå¤§
+	   // æ”¹æˆ200000 / keï¼Œ è¿™æ ·KE=5æ—¶å€™ï¼Œ50HZ å¼€å§‹åŠ±ç£å‡å°åˆ°0
 	   ///////////////////////////////////////////////////////////////////////////
 	   if (MotorTestData5 == 1) {
 	       freqs = 4000000L/data1;
@@ -251,7 +252,7 @@ void CalCarrierWaveFreq(void)
 #ifdef  SF_INDEPAND_OF_FREQUENCY
 	   fcSet = gBasePar.FcSet;
 #else
-	   // µÍËÙÔØÆµ£¬Ä¬ÈÏFE¡£10 = 3.0KHz
+	   // ä½é€Ÿè½½é¢‘ï¼Œé»˜è®¤FEã€‚10 = 3.0KHz
 	   if(freqs1 < 32767L)
 	   {
 		   fcSet = SF_LOW_SPEED;
@@ -267,8 +268,8 @@ void CalCarrierWaveFreq(void)
 	   }
 #endif
 	   
-	   // ¼ÆËãId µÄ¸ø¶¨´óĞ¡....
-	   // 24.38Hz ÒÔÏÂÏßĞÔ±ä»¯...
+	   // è®¡ç®—Id çš„ç»™å®šå¤§å°....
+	   // 24.38Hz ä»¥ä¸‹çº¿æ€§å˜åŒ–...
 	   //////////////////////////
 	   if(freqs1 > 2*freqs) {
 			data1 = 0;
@@ -289,7 +290,7 @@ void CalCarrierWaveFreq(void)
 	   		data1 = data - (data1>>1);
 	   		data1 = __IQsat(data1,data,0);
 	   }
-	   // Êı×ÖÉè¶¨×ª¾ØµçÁ÷Öµ£¬×öÏŞÁ÷ÓÃ...
+	   // æ•°å­—è®¾å®šè½¬çŸ©ç”µæµå€¼ï¼Œåšé™æµç”¨...
 	   data = (long)TORQUE_CUR_LIMIT * 4096L/100;
 	   data = data * data - (long)pm_ref_iq * pm_ref_iq;
 	   if (data < 0) {
@@ -309,14 +310,14 @@ void CalCarrierWaveFreq(void)
 	}
 	gFcCal.Cnt = 0;
 
-	// ´Ë´¦×÷FCºÍÎÂ¶È¹ØÏµµÄ¼ÆËã
+	// æ­¤å¤„ä½œFCå’Œæ¸©åº¦å…³ç³»çš„è®¡ç®—
 	m_TempLim = 185;
-	if (gTemperature.Temp > (m_TempLim - 5))		//ÎÂ¶È´óÓÚ£¨ÏŞÖÆÖµ-5£©¶È
+	if (gTemperature.Temp > (m_TempLim - 5))		//æ¸©åº¦å¤§äºï¼ˆé™åˆ¶å€¼-5ï¼‰åº¦
 	{
-		if(gFcCal.Time >= 2500)						//Ã¿5Ãëµ÷ÕûÒ»´Î  l0310
+		if(gFcCal.Time >= 2500)						//æ¯5ç§’è°ƒæ•´ä¸€æ¬¡  l0310
 		{
 			gFcCal.Time = 0;
-			if(gTemperature.Temp <= m_TempLim)		//ÔØ²¨ÆµÂÊÉı
+			if(gTemperature.Temp <= m_TempLim)		//è½½æ³¢é¢‘ç‡å‡
 			{
 				gFcCal.FcBak += 5;
 			} else if(gTemperature.Temp >= (m_TempLim+5)) {
@@ -330,12 +331,12 @@ void CalCarrierWaveFreq(void)
 	}
     gFcCal.FcBak = (gFcCal.FcBak>fcSet)?fcSet:gFcCal.FcBak;
 
-	// ¿ªÊ¼×÷FCµÄ×î´óºÍ×îĞ¡ÏŞÖÆ
+	// å¼€å§‹ä½œFCçš„æœ€å¤§å’Œæœ€å°é™åˆ¶
 	m_MinFc = 100;
 	m_MaxFc = 200;
 	gFcCal.FcBak = __IQsat(gFcCal.FcBak,m_MaxFc,m_MinFc);
 
-	// ¿ªÊ¼µ÷ÕûÔØ²¨ÆµÂÊ£¬Ã¿40msµ÷Õû0.1KHz¡£
+	// å¼€å§‹è°ƒæ•´è½½æ³¢é¢‘ç‡ï¼Œæ¯40msè°ƒæ•´0.1KHzã€‚
 	if (gFcCal.FcBak > gBasePar.FcSetApply) {
 		gBasePar.FcSetApply++;
 	} else if(gFcCal.FcBak < gBasePar.FcSetApply) {
@@ -360,19 +361,19 @@ void RunCaseDeal(void)
 {
 	switch(gMainStatus.RunStep)
 	{
-		case STATUS_LOW_POWER:	//ÉÏµç»º³å×´Ì¬/Ç·Ñ¹×´Ì¬
+		case STATUS_LOW_POWER:	//ä¸Šç”µç¼“å†²çŠ¶æ€/æ¬ å‹çŠ¶æ€
 			RunCaseLowPower();
 			break;
 
-		case STATUS_GET_PAR:	//²ÎÊı±æÊ¶×´Ì¬
+		case STATUS_GET_PAR:	//å‚æ•°è¾¨è¯†çŠ¶æ€
 			RunCaseGetPar();
 			break;
 
-		case STATUS_SPEED_CHECK://×ªËÙ¸ú×Ù×´Ì¬
+		case STATUS_SPEED_CHECK://è½¬é€Ÿè·Ÿè¸ªçŠ¶æ€
 			RunCaseSpeedCheck();
 			break;
 
-		case STATUS_RUN:		//ÔËĞĞ×´Ì¬£¬Çø·ÖVF/FVC/SVCÔËĞĞ
+		case STATUS_RUN:		//è¿è¡ŒçŠ¶æ€ï¼ŒåŒºåˆ†VF/FVC/SVCè¿è¡Œ
 			RunCaseRun();
 			CalUdcLimitIT();
 			break;
@@ -386,11 +387,11 @@ void RunCaseDeal(void)
             RunCaseBrakeLowBridge();
             break;
 
-        case STATUS_SHORT_GND:	//ÉÏµç¶ÔµØ¶ÌÂ·ÅĞ¶Ï×´Ì¬
+        case STATUS_SHORT_GND:	//ä¸Šç”µå¯¹åœ°çŸ­è·¯åˆ¤æ–­çŠ¶æ€
 			RunCaseShortGnd();
 			break;
 
-		default:				//Í£»ú×´Ì¬£ºËùÓĞÆäËü×´Ì¬ÈÏÎªÊÇ¸Ã×´Ì¬
+		default:				//åœæœºçŠ¶æ€ï¼šæ‰€æœ‰å…¶å®ƒçŠ¶æ€è®¤ä¸ºæ˜¯è¯¥çŠ¶æ€
 			RunCaseStop();
 			break;
 	}	
@@ -418,7 +419,7 @@ void RunCaseLowPower(void)
 			break;
 
 		case 3:
-			// 200msÑÓÊ±
+			// 200mså»¶æ—¶
 			if (((gLowPower.WaiteTime++) >= 100) && (gExcursionInfo.EnableCount >= 200))
 			{
 				gMainStatus.RunStep = STATUS_STOP;
@@ -428,7 +429,7 @@ void RunCaseLowPower(void)
         		if(gMainStatus.ErrorCode == ERROR_UV)
                 {
                     gMainStatus.ErrorCode = 0;
-		            if(gMainStatus.ErrFlag.bit.OvCurFlag == 1)  //ĞŞ¸ÄÇ·Ñ¹ºóÎŞ·¨½øÈë¹ıÁ÷ÖĞ¶ÏµÄ´íÎó
+		            if(gMainStatus.ErrFlag.bit.OvCurFlag == 1)  //ä¿®æ”¹æ¬ å‹åæ— æ³•è¿›å…¥è¿‡æµä¸­æ–­çš„é”™è¯¯
 		            {
 			            gMainStatus.ErrFlag.bit.OvCurFlag = 0;
 			            EALLOW;
@@ -458,13 +459,13 @@ void RunCaseLowPower(void)
 		            }     
         		}
 
-				gPhase.IMPhase = GetTime() << 28;	//ÉÏµçºóËæ»úÑ¡Ôñ³õÊ¼ÏàÎ»
+				gPhase.IMPhase = GetTime() << 28;	//ä¸Šç”µåéšæœºé€‰æ‹©åˆå§‹ç›¸ä½
 			}
 			break;
 
 		default:
 			DisConnectRelay();	
-            gMainStatus.ErrorCode = ERROR_UV;				//´í±êÖ¾
+            gMainStatus.ErrorCode = ERROR_UV;				//é”™æ ‡å¿—
         	gMainStatus.StatusWord.bit.LowUDC = 1;
 			gLowPower.WaiteTime = 0;
 			gLowPower.UDCOld = gUDC.uDCFilter;
@@ -474,9 +475,9 @@ void RunCaseLowPower(void)
 }
 
 /************************************************************
-	²ÎÊı±æÊ¶½×¶Î(¸Ã³ÌĞòÓÃÓÚ¼ì²âUÏàºÍVÏàµçÁ÷¼ì²âÍ¨µÀµÄÔöÒæÆ«²î)
-	Í¬Ê±¼ì²â¶¨×Óµç×èÖµ¡£
-	2ms ×´Ì¬»ú...
+	å‚æ•°è¾¨è¯†é˜¶æ®µ(è¯¥ç¨‹åºç”¨äºæ£€æµ‹Uç›¸å’ŒVç›¸ç”µæµæ£€æµ‹é€šé“çš„å¢ç›Šåå·®)
+	åŒæ—¶æ£€æµ‹å®šå­ç”µé˜»å€¼ã€‚
+	2ms çŠ¶æ€æœº...
 ************************************************************/
 void RunCaseGetPar(void)
 {
@@ -484,16 +485,16 @@ void RunCaseGetPar(void)
 
 
 /************************************************************
-	×ªËÙ¸ú×Ù×´Ì¬´¦Àí
-	2ms, ×´Ì¬»ú...
-	·ç»ú£ºÀûÓÃ·´µç¶¯ÊÆÌá¸ßĞÔÄÜ
-	Ë®±Ã»òÆäËû£ºÖ±½ÓµçÁ÷±Õ»·..
+	è½¬é€Ÿè·Ÿè¸ªçŠ¶æ€å¤„ç†
+	2ms, çŠ¶æ€æœº...
+	é£æœºï¼šåˆ©ç”¨åç”µåŠ¨åŠ¿æé«˜æ€§èƒ½
+	æ°´æ³µæˆ–å…¶ä»–ï¼šç›´æ¥ç”µæµé—­ç¯..
 ************************************************************/
 void RunCaseSpeedCheck(void)
 {
 	long data;
-	if ((gMainCmd.Command.bit.Start == FALSE) ||        //Í£»úÃüÁî
-	    (gMainStatus.ErrorCode      != 0    ))			//¹ÊÕÏ
+	if ((gMainCmd.Command.bit.Start == FALSE) ||        //åœæœºå‘½ä»¤
+	    (gMainStatus.ErrorCode      != 0    ))			//æ•…éšœ
 	{ 
 		gMainStatus.RunStep = 3;
 		gMainStatus.SubStep = 1;
@@ -512,8 +513,8 @@ void RunCaseSpeedCheck(void)
 #endif
 
 //SpeedData[0]++;
-	// ×´Ì¬¼´£¬200ms, È»ºó½øÈëµ½RUN ×´Ì¬, gMainCmd.FreqSetApply ½ÓÏÂÀ´´Ó¹¦ÄÜ
-	// ´«µİ¹ıÀ´¡£¡£¡£¡£
+	// çŠ¶æ€å³ï¼Œ200ms, ç„¶åè¿›å…¥åˆ°RUN çŠ¶æ€, gMainCmd.FreqSetApply æ¥ä¸‹æ¥ä»åŠŸèƒ½
+	// ä¼ é€’è¿‡æ¥ã€‚ã€‚ã€‚ã€‚
 	////////////////////////////////////////////////////////////////////////
 	if (pm_control_mode != 0)
 	{
@@ -627,8 +628,8 @@ typedef enum {
     McSpdChangeToClosed = 4,
     McSFinished         = 5
 } MCP_SPDSTATE_DEF;
-MCP_SPDSTATE_DEF McSpdState;        // È«¾Ö±äÁ¿ÔÚSTOP »òÆäËû×´Ì¬¿ÉÒÔÇåÁã²Ù×÷
-static int McSpdStateCnt;           // ÓĞÊ±ºò»á³öÏÖ£¬2MS ¼ä¸ôÊ±¼äµ¼ÖÂ¹¦ÄÜÃ»ÓĞ½øÈëÖ±Á÷ÖÆ¶¯£¬OpenLoopAcc ÅĞ¶ÏÖ±½Ó½øÈëOpenAcc
+MCP_SPDSTATE_DEF McSpdState;        // å…¨å±€å˜é‡åœ¨STOP æˆ–å…¶ä»–çŠ¶æ€å¯ä»¥æ¸…é›¶æ“ä½œ
+static int McSpdStateCnt;           // æœ‰æ—¶å€™ä¼šå‡ºç°ï¼Œ2MS é—´éš”æ—¶é—´å¯¼è‡´åŠŸèƒ½æ²¡æœ‰è¿›å…¥ç›´æµåˆ¶åŠ¨ï¼ŒOpenLoopAcc åˆ¤æ–­ç›´æ¥è¿›å…¥OpenAcc
 int IDRef;int FrqTemp;
 int RecordOpen;
 void OpenLoopAccRun(void)
@@ -666,8 +667,8 @@ void OpenLoopAccRun(void)
              } else {
                  IDRef += 30;
              }
-//GpioDataRegs.GPATOGGLE.bit.GPIO16  = 1; // Å¼¶ûÔÚÉ²³µºóÖ±Á÷ÖÆ¶¯ÆÚ¼äÈ·ÊµÃ»ÓĞ½øÀ´Õâ¸öµØ·½¡£
-             // µÍËÙÉ²³µºó½øÈëÖ±Á÷ÖÆ¶¯£¬»áÃ»ÓĞÓ°Ïìµ¼ÖÂÖ±Á÷ÖÆ¶¯ÆÚ¼äÎó±¨ Êä³öÈ±Ïî
+//GpioDataRegs.GPATOGGLE.bit.GPIO16  = 1; // å¶å°”åœ¨åˆ¹è½¦åç›´æµåˆ¶åŠ¨æœŸé—´ç¡®å®æ²¡æœ‰è¿›æ¥è¿™ä¸ªåœ°æ–¹ã€‚
+             // ä½é€Ÿåˆ¹è½¦åè¿›å…¥ç›´æµåˆ¶åŠ¨ï¼Œä¼šæ²¡æœ‰å½±å“å¯¼è‡´ç›´æµåˆ¶åŠ¨æœŸé—´è¯¯æŠ¥ è¾“å‡ºç¼ºé¡¹
              PaseShiftEnable = 1;
          } else {
 //AccRunData[4]++;
@@ -728,7 +729,7 @@ void OpenLoopAccRun(void)
         McSpdState = McInit;
         pm_est_angel = (long)(gPhase.OutPhase - pm_dq_angle) * 3217L >> 8;
 
-        // ÇĞÈë±Õ»·µÄIQ ³õÊ¼¸ø¶¨...
+        // åˆ‡å…¥é—­ç¯çš„IQ åˆå§‹ç»™å®š...
         pm_integral_speed = ((long)OPEN_LOOP_TOR_START << 8);
 #endif
     }
@@ -757,8 +758,8 @@ IsRecordThisSample(
 
 int IDRef2;
 /************************************************************
-	Õı³£ÔËĞĞ¹ı³Ì´¦Àí
-	ÔËĞĞ×´Ì¬»ú, 2ms...
+	æ­£å¸¸è¿è¡Œè¿‡ç¨‹å¤„ç†
+	è¿è¡ŒçŠ¶æ€æœº, 2ms...
 ************************************************************/
 long Iq = 0;
 long Id = 0;
@@ -813,7 +814,7 @@ void RunCaseRun(void)
            return;
         }
 
-        // Enable drive 200MS ÄÚ£¬Ã»ÓĞRUNCASE Iq = 0. ²»Æô¶¯...
+        // Enable drive 200MS å†…ï¼Œæ²¡æœ‰RUNCASE Iq = 0. ä¸å¯åŠ¨...
         if ((pm_check_ip_flag == 0) && (DCStart_flag == 0)) {
             pm_ref_iq = Iq;
             pm_ref_id = Id;
@@ -838,10 +839,10 @@ void RunCaseRun(void)
 
 
 /************************************************************
-    ÉÏµç¶ÔµØ¶ÌÂ·ÅĞ¶Ï
-    Alpha µ××ù²ÉÑùµÄÊÇV W£¬
-    HC    µ××ù²ÉÑùµÄÊÇU V£¬ËùÒÔÖ®Ç°ÓÃU Ïà×ö¶ÔµØ±£»¤¡£ÕâÀï¸Ä³ÉVÏà¡£
-    ¼´£ºV+Ïà·¢²¨£¬¼ì²âVÏàµçÁ÷´óĞ¡
+    ä¸Šç”µå¯¹åœ°çŸ­è·¯åˆ¤æ–­
+    Alpha åº•åº§é‡‡æ ·çš„æ˜¯V Wï¼Œ
+    HC    åº•åº§é‡‡æ ·çš„æ˜¯U Vï¼Œæ‰€ä»¥ä¹‹å‰ç”¨U ç›¸åšå¯¹åœ°ä¿æŠ¤ã€‚è¿™é‡Œæ”¹æˆVç›¸ã€‚
+    å³ï¼šV+ç›¸å‘æ³¢ï¼Œæ£€æµ‹Vç›¸ç”µæµå¤§å°
 ************************************************************/
 void RunCaseShortGnd(void)
 {
@@ -860,7 +861,7 @@ void RunCaseShortGnd(void)
             EPwm3Regs.TBPRD = SHORT_GND_PERIOD;
             EPwm4Regs.TBPRD = SHORT_GND_PERIOD;
 
-            //Ç¿ÖÆ¹Ø±ÕÄ³Ğ©ÇÅ±Û
+            //å¼ºåˆ¶å…³é—­æŸäº›æ¡¥è‡‚
             EPwm2Regs.AQCSFRC.all = 0x00;//4;
             EPwm3Regs.AQCSFRC.all = 0x05;
             EPwm4Regs.AQCSFRC.all = 0x05;
@@ -879,14 +880,14 @@ void RunCaseShortGnd(void)
             break;
         case 3:
             if ((gShortGnd.Flag          != 0       ) ||
-                (abs(gShortGnd.ShortCur) > 1000     )) //(30 * 32)) ||// 410*2 Îª·åÖµµçÁ÷£¬Óë±äÆµÆ÷¶î¶¨µçÁ÷10%±È½Ï
+                (abs(gShortGnd.ShortCur) > 1000     )) //(30 * 32)) ||// 410*2 ä¸ºå³°å€¼ç”µæµï¼Œä¸å˜é¢‘å™¨é¢å®šç”µæµ10%æ¯”è¾ƒ
             {
 //RunCaseShortGndData[0]=gShortGnd.Flag;
 //RunCaseShortGndData[1]++;
 //RunCaseShortGndData[2]=gShortGnd.ShortCur;
 //RunCaseShortGndData[3]=gShortGnd.BaseUDC;
 //RunCaseShortGndData[4]=gUDC.uDC;
-                // ÉÏµç¶ÔµØ¶ÌÂ·´¦Àí
+                // ä¸Šç”µå¯¹åœ°çŸ­è·¯å¤„ç†
                 DisableDrive();
                 gMainStatus.ErrorCode = ERROR_MOTOR_SHORT_TO_GND;
                 gMainStatus.SubStep = 4;
@@ -988,7 +989,7 @@ void RunCaseBrakeLowBridge(void)
         BrakeLowBridgeState = BRAKE_LOW_BRIGE_CHECK;
     break;
     case BRAKE_LOW_BRIGE_CHECK:
-        // ÅĞ¶ÏµçÁ÷´óĞ¡£¬ÁÙÊ±µ÷ÊÔ¹Ì¶¨ÑÓÊ±·½Ê½ 2ms, 1000 ~ 2s
+        // åˆ¤æ–­ç”µæµå¤§å°ï¼Œä¸´æ—¶è°ƒè¯•å›ºå®šå»¶æ—¶æ–¹å¼ 2ms, 1000 ~ 2s
         BrakeLowBridgeStateCnt++;
         if (BrakeLowBridgeStateCnt > 1500) {
             BrakeLowBridgeStateCnt = 0;
@@ -1040,7 +1041,7 @@ void RunCaseBrakeLowBridge(void)
 }
 
 /************************************************************
-	Í£»ú¹ı³Ì´¦Àí
+	åœæœºè¿‡ç¨‹å¤„ç†
 ************************************************************/
 //int VolOffset;
 //int Adc_Temp_V1;
@@ -1048,25 +1049,25 @@ void RunCaseBrakeLowBridge(void)
 //int Adc_Temp_V3;
 void RunCaseStop(void)
 {
-    // Õë¶ÔË®±Ã£¬×ªËÙ×·×Ù²»ĞèÒª£¬ÎªÁË¸ú·çÉÈ³ÌĞòÍ³Ò»£¬ÅĞ¶ÏÌõ¼ş±£³ÖÒ»ÖÂ¡£¶ÔÓÚË®±Ã£¬
-    // ÕâÈı¸öAD¿ÚµÄÖµÎª155.....
+    // é’ˆå¯¹æ°´æ³µï¼Œè½¬é€Ÿè¿½è¸ªä¸éœ€è¦ï¼Œä¸ºäº†è·Ÿé£æ‰‡ç¨‹åºç»Ÿä¸€ï¼Œåˆ¤æ–­æ¡ä»¶ä¿æŒä¸€è‡´ã€‚å¯¹äºæ°´æ³µï¼Œ
+    // è¿™ä¸‰ä¸ªADå£çš„å€¼ä¸º155.....
     ////////////////////////////////////////////////////////////////////
     //    Adc_Temp_V1 = AdcResult.ADCRESULT4;
     //    Adc_Temp_V2 = AdcResult.ADCRESULT5;
     //    Adc_Temp_V3 = AdcResult.ADCRESULT6;
     //    VolOffset = (Adc_Temp_V1 + Adc_Temp_V2 + Adc_Temp_V3);
     ////////////////////////////////////////////////////////////
-    DisableDrive();							//Í£»ú·âËøÊä³ö
+    DisableDrive();							//åœæœºå°é”è¾“å‡º
 
 	PrepareParForRun();
 	pmsvc_init();
 	PMFluxWeakInit();
 	gMainStatus.SubStep = 1;
-    McSpdState = McInit;    // MCOPEN Ê±ºòÇ·Ñ¹£¬ÔòÃ»Ã»°ì·¨ÖØĞÂ¿ªÊ¼DC--OPENRUN
+    McSpdState = McInit;    // MCOPEN æ—¶å€™æ¬ å‹ï¼Œåˆ™æ²¡æ²¡åŠæ³•é‡æ–°å¼€å§‹DC--OPENRUN
 
     if(gMainStatus.StatusWord.bit.RunEnable != 3)
 	{
-		return;								//µÈ´ıÁãÆ¯¼ì²âÍê³É
+		return;								//ç­‰å¾…é›¶æ¼‚æ£€æµ‹å®Œæˆ
 	}
 
 #ifdef SHORT_GND_TEST
@@ -1083,7 +1084,7 @@ void RunCaseStop(void)
 #endif
 
 	/////////////////////////////////////////
-	if(gMainCmd.Command.bit.TunePart == 1)	//ÅĞ¶ÏÊÇ·ñĞèÒª²ÎÊı±æÊ¶
+	if(gMainCmd.Command.bit.TunePart == 1)	//åˆ¤æ–­æ˜¯å¦éœ€è¦å‚æ•°è¾¨è¯†
 	{
 		gMainStatus.RunStep = STATUS_GET_PAR;
 		gMainStatus.SubStep = 1;		
@@ -1092,14 +1093,14 @@ void RunCaseStop(void)
 
 	if ((gMainStatus.ErrorCode == ERROR_NONE) && (gMainCmd.Command.bit.Start == TRUE))
 	{
-		// ×ªËÙ¸ú×ÙÆğ¶¯, Ä¿Ç°¹Ì¶¨Îª¸ÃÄ£Ê½Æô¶¯......
-		// ×¢ÒâÂß¼­£¬ÕâÀïÏÈ¿ª²¨£¬PWM£¬200ms ×óÓÒIPD£¬È»ºóÕı³£Æô¶¯.
-		// Èç¹ûÕâÀï½ûÖ¹¿ª²¨£¬Æô¶¯¹ıÁ÷£¬Ô­Òò´ı²é...
-		// ¿ª²¨Ê±ºòÓĞ¸öµçÁ÷¼â£¬ÒòÎªÊÇ4066 Ô­Òò£¬Ã»ÓĞ¿ª²¨µÄÊ±ºòµçÁ÷Ã»ÓĞµ«4066 ¼ì²âµÄÓĞµçÆ½
+		// è½¬é€Ÿè·Ÿè¸ªèµ·åŠ¨, ç›®å‰å›ºå®šä¸ºè¯¥æ¨¡å¼å¯åŠ¨......
+		// æ³¨æ„é€»è¾‘ï¼Œè¿™é‡Œå…ˆå¼€æ³¢ï¼ŒPWMï¼Œ200ms å·¦å³IPDï¼Œç„¶åæ­£å¸¸å¯åŠ¨.
+		// å¦‚æœè¿™é‡Œç¦æ­¢å¼€æ³¢ï¼Œå¯åŠ¨è¿‡æµï¼ŒåŸå› å¾…æŸ¥...
+		// å¼€æ³¢æ—¶å€™æœ‰ä¸ªç”µæµå°–ï¼Œå› ä¸ºæ˜¯4066 åŸå› ï¼Œæ²¡æœ‰å¼€æ³¢çš„æ—¶å€™ç”µæµæ²¡æœ‰ä½†4066 æ£€æµ‹çš„æœ‰ç”µå¹³
 		if (gMainCmd.Command.bit.SpeedSearch == TRUE)
 		{
             // 272, / 16 = 17
-            // Ë®±ÃÒ»°ãÃ»ÓĞ·´µç¶¯ÊÆ²ÉÑù£¬·ç»úµÄĞèÒªÈ·ÈÏ¸ÃÖµ£¡£¡£¡
+            // æ°´æ³µä¸€èˆ¬æ²¡æœ‰åç”µåŠ¨åŠ¿é‡‡æ ·ï¼Œé£æœºçš„éœ€è¦ç¡®è®¤è¯¥å€¼ï¼ï¼ï¼
 #ifdef SPIN_CONTROL_WITH_BEMF
             //if (VolOffset < BemfOffset) {
 		    if (1) {
@@ -1156,8 +1157,8 @@ void RunCaseStop(void)
 }
 
 /************************************************************
-	Æô¶¯µç»úÔËĞĞÇ°µÄÊı¾İ³õÊ¼»¯´¦Àí£¬Îªµç»úÔËĞĞ×¼±¸³õÊ¼²ÎÊı
-	Í£»ú¹ı³Ì±äÁ¿ÇåÁã´¦Àí...
+	å¯åŠ¨ç”µæœºè¿è¡Œå‰çš„æ•°æ®åˆå§‹åŒ–å¤„ç†ï¼Œä¸ºç”µæœºè¿è¡Œå‡†å¤‡åˆå§‹å‚æ•°
+	åœæœºè¿‡ç¨‹å˜é‡æ¸…é›¶å¤„ç†...
 ************************************************************/
 void PrepareParForRun(void)
 {
@@ -1172,7 +1173,7 @@ void PrepareParForRun(void)
 	IDRef = 0;
 	IDRef2 = 0;
 
-	if(gMainCmd.FreqDesired > 0)		//¸ù¾İÄ¿±êÆµÂÊ·½ÏòÈ·¶¨³õÊ¼ÏàÎ»½Ç
+	if(gMainCmd.FreqDesired > 0)		//æ ¹æ®ç›®æ ‡é¢‘ç‡æ–¹å‘ç¡®å®šåˆå§‹ç›¸ä½è§’
 	{
 		gOutVolt.VoltPhaseApply = 8192;
 	} else {
@@ -1243,9 +1244,9 @@ void PrepareParForRun(void)
     MIN_SAMPLE_TIME     = MotorTestData4 + MotorTestData1;  // (T_SAMPLE + T_DELAY)
     TWO_MIN_SAMPLE_TIME = MIN_SAMPLE_TIME * 2;              // MIN_SAMPLE_TIME * 2;
 
-    //    data =  (long)75000UL * OVER_SPEED_SCALING; // ¹ıËÙÆµÂÊÏµÊı.Max = 20000 * 120
+    //    data =  (long)75000UL * OVER_SPEED_SCALING; // è¿‡é€Ÿé¢‘ç‡ç³»æ•°.Max = 20000 * 120
     //    pm_fast_freq = (data * 16)/100;             // 384000
-    //    ³õÊ¼»¯Ò»´Î£¬µ¼ÖÂ  gBasePar.MaxFreq Ã»ÓĞ³õÊ¼»¯... ...
+    //    åˆå§‹åŒ–ä¸€æ¬¡ï¼Œå¯¼è‡´  gBasePar.MaxFreq æ²¡æœ‰åˆå§‹åŒ–... ...
     long data;
     data =  (long)gBasePar.MaxFreq * OVER_SPEED_SCALING;
 #ifdef FREQUENCY_CONTROL_01HZ
@@ -1256,8 +1257,8 @@ void PrepareParForRun(void)
 }
 
 /************************************************************
-	¼ÆËãÁãÆ¯³ÌĞò
-	4066£¬ËùÒÔ²»ÄÜÒ»Ö±¶ÁÈ¡, main2ms call
+	è®¡ç®—é›¶æ¼‚ç¨‹åº
+	4066ï¼Œæ‰€ä»¥ä¸èƒ½ä¸€ç›´è¯»å–, main2ms call
 ************************************************************/
 #if (CURRENT_SAMPLE_TYPE == CURRENT_SAMPLE_1SHUNT)
 void GetCurrentExcursion(void)
@@ -1314,12 +1315,13 @@ void GetCurrentExcursion(void)
 		gExcursionInfo.Count = 0;
 
 		gMainStatus.StatusWord.bit.RunEnable = 3;
-		if ((abs(m_ErrIv-2048) < 500) && (1))   // µçÑ¹ÅĞ¶Ï£¿£¿
+		if ((abs(m_ErrIv-2048) < 500) && (1))   // ç”µå‹åˆ¤æ–­ï¼Ÿï¼Ÿ
 		{
 		    gExcursionInfo.ErrUu = m_ErrUu;
 			gExcursionInfo.ErrIv = m_ErrIv;
 			gExcursionInfo.ErrIbus = m_ErrIbus;
 			gExcursionInfo.ErrCnt = 0;
+			g_adc_offset_ready = 1;    // ADCé›¶åé‡‡é›†å®Œæˆ
 		} else {
 			gMainStatus.ErrorCode = ERROR_CURRENT_SAMPLE;
 			gExcursionInfo.ErrCnt = 0;
@@ -1383,24 +1385,40 @@ void GetCurrentExcursion(void)
 
         gMainStatus.StatusWord.bit.RunEnable = 3;
         //if ((abs(m_ErrIu) < 5120) && (abs(m_ErrIv) < 5120) && (abs(m_ErrIw) < 5120))
-        if ((abs(m_ErrIu) < 5120) && (abs(m_ErrIv) < 5120))// && (abs(m_ErrIw) < 5120))
-        {
+        // if ((abs(m_ErrIu) < 5120) && (abs(m_ErrIv) < 5120))// && (abs(m_ErrIw) < 5120))
+        // {
             gExcursionInfo.ErrIu = m_ErrIu;
             gExcursionInfo.ErrIv = m_ErrIv;
             gExcursionInfo.ErrIw = m_ErrIw;
             gExcursionInfo.ErrCnt = 0;
-        } else {
-            gMainStatus.ErrorCode = ERROR_CURRENT_SAMPLE;
-            gExcursionInfo.ErrCnt = 0;
-            gExcursionInfo.EnableCount = 0;
-        }
+        // } else {
+        //     gMainStatus.ErrorCode = ERROR_CURRENT_SAMPLE;
+        //     gExcursionInfo.ErrCnt = 0;
+        //     gExcursionInfo.EnableCount = 0;
+        // }
+
+        g_adc_offset_ready = 1;    // ADCé›¶åé‡‡é›†å®Œæˆ
     }
 }
 #endif
 
+/****************************************************************
+    ADCé›¶åé˜ˆå€¼è‡ªæ£€
+   Err æ˜¯16ä½å¯¹é½ç©ºé—´ä¸‹çš„åç§»é‡ï¼ˆç›¸å¯¹ADCä¸­ç‚¹32768ï¼‰
+   ç­‰æ•ˆ12ä½é˜ˆå€¼500 â†’ 16ä½é˜ˆå€¼ = 500 << 4 = 8000
+*****************************************************************/
+int check_adc_offset_threshold(void)
+{
+    if (abs(gExcursionInfo.ErrIu) > ADC_OFFSET_THRESHOLD_16BIT) return -1;
+    if (abs(gExcursionInfo.ErrIv) > ADC_OFFSET_THRESHOLD_16BIT) return -1;
+    if (abs(gExcursionInfo.ErrIw) > ADC_OFFSET_THRESHOLD_16BIT) return -1;
+    return 0;
+}
+
+
 /*************************************************************
 **************************************************************
-ÖÜÆÚÖĞ¶Ï£ºÍê³ÉÄ£ÄâÁ¿²ÉÑù¡¢µçÁ÷¼ÆËã¡¢VCµçÁ÷»·¿ØÖÆµÈ²Ù×÷
+å‘¨æœŸä¸­æ–­ï¼šå®Œæˆæ¨¡æ‹Ÿé‡é‡‡æ ·ã€ç”µæµè®¡ç®—ã€VCç”µæµç¯æ§åˆ¶ç­‰æ“ä½œ
 **************************************************************
 *************************************************************/
 #pragma CODE_SECTION(ADCOverInterrupt, "ramfuncs");
@@ -1438,15 +1456,15 @@ void ADCOverInterrupt()
 }
 
 /*************************************************************
-	Ëæ»úPWM´¦Àí£¬Ê¹ÔØ²¨ÖÜÆÚºÍÊä³öÏàÎ»ÉúĞ§
+	éšæœºPWMå¤„ç†ï¼Œä½¿è½½æ³¢å‘¨æœŸå’Œè¾“å‡ºç›¸ä½ç”Ÿæ•ˆ
 *************************************************************/
 void SoftPWMProcess(void)
 {
-    // ²»Í¬³¡¾°ÏÂ¿ÉÄÜ°Ú¶¯µÄ·¶Î§ÓĞÇø±ğ¡£
+    // ä¸åŒåœºæ™¯ä¸‹å¯èƒ½æ‘†åŠ¨çš„èŒƒå›´æœ‰åŒºåˆ«ã€‚
 }
 
 /*************************************************************
-	¹ıÁ÷ÖĞ¶Ï´¦Àí³ÌĞò£¨¿ÉÆÁ±ÎÖĞ¶Ï£¬µçÆ½´¥·¢£©
+	è¿‡æµä¸­æ–­å¤„ç†ç¨‹åºï¼ˆå¯å±è”½ä¸­æ–­ï¼Œç”µå¹³è§¦å‘ï¼‰
 *************************************************************/
 void HardWareErrorDeal()
 {
@@ -1454,7 +1472,7 @@ void HardWareErrorDeal()
 
 	gMainStatus.ErrFlag.bit.OvCurFlag = 1;
 	if (gMainStatus.RunStep == STATUS_SHORT_GND) {
-	    gShortGnd.Flag = 1;                     //ÉÏµç¶ÔµØ¶ÌÂ·
+	    gShortGnd.Flag = 1;                     //ä¸Šç”µå¯¹åœ°çŸ­è·¯
 	} else if(gMainStatus.ErrorCode != ERROR_OC_HARDWARE) {
 		gMainStatus.ErrorCode = ERROR_OC_HARDWARE;
 	}
@@ -1475,13 +1493,13 @@ void HardWareErrorDeal()
 }
 
 /*************************************************************
-	Èí¼ş¹ÊÕÏ´¦Àí
+	è½¯ä»¶æ•…éšœå¤„ç†
 *************************************************************/
 void SoftWareErrorDeal(void)					
 {
 	static int SoftwareOCCnt;
 
-	// Ç·Ñ¹×´Ì¬ÏÂ²»ÅĞ¶ÏÈí¼ş¹ÊÕÏ
+	// æ¬ å‹çŠ¶æ€ä¸‹ä¸åˆ¤æ–­è½¯ä»¶æ•…éšœ
 	if ((gMainStatus.RunStep   == STATUS_LOW_POWER        ) ||
 	    (gMainStatus.ErrorCode == ERROR_MOTOR_SHORT_TO_GND))
 	{
@@ -1492,13 +1510,13 @@ void SoftWareErrorDeal(void)
 	{
 	    gMainStatus.LastErrorCode = gMainStatus.ErrorCode;
 
-		// ¹ÊÕÏ¸´Î»ºóÔËĞĞ½Ç¶È·¢Éú±ä»¯ 
+		// æ•…éšœå¤ä½åè¿è¡Œè§’åº¦å‘ç”Ÿå˜åŒ– 
         if (ERROR_NONE != gMainStatus.ErrorCode) {
 			gPhase.IMPhase += 0x40000000L;
 		}				           
     }
 
-	// ¿ªÊ¼¹ÊÕÏ¸´Î»
+	// å¼€å§‹æ•…éšœå¤ä½
 	if (gMainCmd.Command.bit.ErrorOK == 1) 			
 	{
 		gMainStatus.ErrorCode = ERROR_NONE;
@@ -1525,8 +1543,8 @@ void SoftWareErrorDeal(void)
 		}
 	}
 
-	/////////////////////////////////////////////////¿ªÊ¼ÅĞ¶ÏÈí¼ş¹ÊÕÏ
-	// Èí¼ş¹ıÁ÷Êµ¼ÊÒâÒå²»´ó£¬µ«¾Íµ±¶àÒ»ÖØ±£»¤¶øÒÑ°É.ÓÃÓ²¼şÏàÍ¬µÄ¹ıÁ÷µã...
+	/////////////////////////////////////////////////å¼€å§‹åˆ¤æ–­è½¯ä»¶æ•…éšœ
+	// è½¯ä»¶è¿‡æµå®é™…æ„ä¹‰ä¸å¤§ï¼Œä½†å°±å½“å¤šä¸€é‡ä¿æŠ¤è€Œå·²å§.ç”¨ç¡¬ä»¶ç›¸åŒçš„è¿‡æµç‚¹...
 	// if ((gLineCur.CurBaseInv 		 > SOFT_OC_POINT) &&
 	// 	(gMainCmd.Command.bit.Start == TRUE		 ))
 	// {
@@ -1541,12 +1559,12 @@ void SoftWareErrorDeal(void)
 	//     if (SoftwareOCCnt > 1) SoftwareOCCnt--;
 	// }
 
-	// if (gUDC.uDC > gInvInfo.InvUpUDC)	        //¹ıÑ¹ÅĞ¶Ï,Ê¹ÓÃ´óÂË²¨µçÑ¹
+	// if (gUDC.uDC > gInvInfo.InvUpUDC)	        //è¿‡å‹åˆ¤æ–­,ä½¿ç”¨å¤§æ»¤æ³¢ç”µå‹
 	// {
 	// 	DisableDrive();
 	// 	gMainStatus.ErrorCode = ERROR_OV_ACC_SPEED;
 	// }
-	// else if (gUDC.uDC < gInvInfo.InvLowUDC)   //Ç·Ñ¹ÅĞ¶Ï,Ê¹ÓÃ´óÂË²¨µçÑ¹
+	// else if (gUDC.uDC < gInvInfo.InvLowUDC)   //æ¬ å‹åˆ¤æ–­,ä½¿ç”¨å¤§æ»¤æ³¢ç”µå‹
 	// {
 	// 	DisableDrive();
 	// 	DisConnectRelay();
@@ -1562,7 +1580,7 @@ void SoftWareErrorDeal(void)
 	// }
 
     /*
-	// ERROR_STALL ´¦Àí
+	// ERROR_STALL å¤„ç†
 	static int InstallCnt2;
     if ((pm_ref_speed           > 80000                     ) &&    // Ref > 50Hz,
         (pm_est_omg             < 60000                     ) &&    // omg < 37Hz,
@@ -1580,11 +1598,11 @@ void SoftWareErrorDeal(void)
     }
     */
 
-    // ³¬ËÙ¼à²â£¬ËÙ¶È³¬µ÷¹ı´ó¡£
-    // Ò»°ãÇé¿ö£º
-    // 1£ºÃ»½Óµç»ú£¬ËÙ¶È¹Û²ìÖµ²»¶Ô¡£
-    // 2£º¸ßËÙPI Ì«Ğ¡£¬¼ÓËÙÊ±ºòËÙ¶È³¬µ÷Ì«¶à¡££¨±ÈÈç±ùÏäÑ¹»ú¸ºÔØ£¬ÖØÔÙÆô¶¯¿ÉÄÜ»á£©
-    // ÊÓÇé¿ö£¬¿ÉÒÔÆÁ±Î¡£
+    // è¶…é€Ÿç›‘æµ‹ï¼Œé€Ÿåº¦è¶…è°ƒè¿‡å¤§ã€‚
+    // ä¸€èˆ¬æƒ…å†µï¼š
+    // 1ï¼šæ²¡æ¥ç”µæœºï¼Œé€Ÿåº¦è§‚å¯Ÿå€¼ä¸å¯¹ã€‚
+    // 2ï¼šé«˜é€ŸPI å¤ªå°ï¼ŒåŠ é€Ÿæ—¶å€™é€Ÿåº¦è¶…è°ƒå¤ªå¤šã€‚ï¼ˆæ¯”å¦‚å†°ç®±å‹æœºè´Ÿè½½ï¼Œé‡å†å¯åŠ¨å¯èƒ½ä¼šï¼‰
+    // è§†æƒ…å†µï¼Œå¯ä»¥å±è”½ã€‚
     // static int InstallCnt1;
     // if (pm_fast_freq != 0)
     // {
@@ -1601,13 +1619,13 @@ void SoftWareErrorDeal(void)
     // }
 
     /*
-    // ¸ÉÉÕ±£»¤¡£ËÙ¶È´ïµ½Ò»¶¨ÖµÇÒ¸ºÔØºÜĞ¡µÄÇé¿ö£¬³ÖĞøÒ»¶¨Ê±¼ä¡£¡£¡£
+    // å¹²çƒ§ä¿æŠ¤ã€‚é€Ÿåº¦è¾¾åˆ°ä¸€å®šå€¼ä¸”è´Ÿè½½å¾ˆå°çš„æƒ…å†µï¼ŒæŒç»­ä¸€å®šæ—¶é—´ã€‚ã€‚ã€‚
     ////////////////////////////////////////////////////////
     static int InstallCnt3;
     if ((pm_ref_speed                   > 130000) &&     // Ref > 80Hz,
         (pm_est_omg                     > 130000) &&     // omg > 80Hz,
-        ((gLineCur.CurPerFilter >> 5)   < 800   ) &&     // 1 / 5 ¶î¶¨Öµ
-        (gLineCur.CurPer                > 120   ) &&     // ½ÓÁËµç»ú£¬ÊÇ¿Õ×ª. ²»½Óµç»úÆ½¾ù50ÒÔÏÂ
+        ((gLineCur.CurPerFilter >> 5)   < 800   ) &&     // 1 / 5 é¢å®šå€¼
+        (gLineCur.CurPer                > 120   ) &&     // æ¥äº†ç”µæœºï¼Œæ˜¯ç©ºè½¬. ä¸æ¥ç”µæœºå¹³å‡50ä»¥ä¸‹
         (gMainCmd.Command.bit.StartDC  != 1     )) {
         InstallCnt3++;
         if (InstallCnt3 > 1000) {
@@ -1623,7 +1641,7 @@ void SoftWareErrorDeal(void)
 }
 
 /*************************************************************
-	Ê¸Á¿¿ØÖÆµÄ¹ıÑ¹ÒÖÖÆ¹¦ÄÜ£¬Í¨¹ıÄ¸ÏßµçÑ¹ÏŞÖÆÊä³ö×ª¾Ø(·¢µç×ª¾Ø)µÄ×î´óÖµ
+	çŸ¢é‡æ§åˆ¶çš„è¿‡å‹æŠ‘åˆ¶åŠŸèƒ½ï¼Œé€šè¿‡æ¯çº¿ç”µå‹é™åˆ¶è¾“å‡ºè½¬çŸ©(å‘ç”µè½¬çŸ©)çš„æœ€å¤§å€¼
 *************************************************************/
 void CalUdcLimitIT(void)
 {
@@ -1652,7 +1670,7 @@ void CalUdcLimitIT(void)
         }
         else if((m_Udc < gOvUdc.Limit) && (gUdcLimitIt.FirstOvUdcFlag == 0))
         {
-            //µÚÒ»´Î½øÈë¹ıÑ¹Î£ÏÕÇø£¬Á¦¾Ø²»ÔÙÔö¼Ó¼´¿É
+            //ç¬¬ä¸€æ¬¡è¿›å…¥è¿‡å‹å±é™©åŒºï¼ŒåŠ›çŸ©ä¸å†å¢åŠ å³å¯
             gUdcLimitIt.FirstOvUdcFlag = 1;
             gUdcLimitIt.UDCLimit = gUdcLimitIt.UdcPid.Total>>16;
         }
@@ -1711,14 +1729,14 @@ void calc_out_angle2()
     unsigned int data1;
 
     if ((gMainCmd.Command.bit.StartDC == 1) ||
-        (gMainCmd.Command.bit.StopDC  == 1)) /****Á÷ÖÆ¶¯×´Ì¬****/
+        (gMainCmd.Command.bit.StopDC  == 1)) /****æµåˆ¶åŠ¨çŠ¶æ€****/
     {
         // Range: 0 ~ 65535
-        data1 = gPhase.IMPhase;//±àÂëÆ÷½Ç¶È + 110 * 65535 / 360£¡£¡£¡
+        data1 = gPhase.IMPhase;//ç¼–ç å™¨è§’åº¦ + 110 * 65535 / 360ï¼ï¼ï¼
     }
     else
     {
-        data1 = encoder.elec_degree;//±àÂëÆ÷½Ç¶È + 110 * 65535 / 360£¡£¡£¡
+        data1 = encoder.elec_degree;//ç¼–ç å™¨è§’åº¦ + 110 * 65535 / 360ï¼ï¼ï¼
     }
 
     data = data1 + pm_dq_angle;
@@ -1780,43 +1798,43 @@ void MotorControlISR()
     Q_CUR_KI =  q_ki; 
 
 // ==========================================================
-    // ¹¤Òµ¼¶ PWM Ëæ»úÀ©Æµ (Spread Spectrum) Âß¼­
-    // ÓÃÓÚ´òÉ¢µç´Å¸ÉÈÅ (EMI) ·åÖµºÍÒÖÖÆ¸ßÆµĞ¥½Ğ
+    // å·¥ä¸šçº§ PWM éšæœºæ‰©é¢‘ (Spread Spectrum) é€»è¾‘
+    // ç”¨äºæ‰“æ•£ç”µç£å¹²æ‰° (EMI) å³°å€¼å’ŒæŠ‘åˆ¶é«˜é¢‘å•¸å«
     // ==========================================================
     
-    // 1. Î¬»¤Ò»¸ö¶ÀÁ¢µÄËæ»úÊıÖÖ×Ó£¬È«³ÌÔÚ¾²Ì¬Óò×ÔÑ­»·£¬²»ÊÜÍâ²¿»ºÂı±äÁ¿¸ÉÈÅ
+    // 1. ç»´æŠ¤ä¸€ä¸ªç‹¬ç«‹çš„éšæœºæ•°ç§å­ï¼Œå…¨ç¨‹åœ¨é™æ€åŸŸè‡ªå¾ªç¯ï¼Œä¸å—å¤–éƒ¨ç¼“æ…¢å˜é‡å¹²æ‰°
     static uint32_t prng_state = 0x6D2B79F5UL; 
     static uint16_t init_flag = 0;
 
     if (!init_flag) 
     {
-        // ÉÏµçµÚÒ»ÅÄ£º×¢Èë Node ID¡£
-        // ±£Ö¤×ÜÏßÉÏÄÄÅÂÓĞ 10 Ì¨µç»úÍ¬Ê±ÉÏµç£¬ËüÃÇµÄ°×ÔëÉùĞòÁĞÒ²ÊÇ´í¿ªµÄ£¬¾ø²»·¢Éú¹²ÕñÅÄÆµ¡£
+        // ä¸Šç”µç¬¬ä¸€æ‹ï¼šæ³¨å…¥ Node IDã€‚
+        // ä¿è¯æ€»çº¿ä¸Šå“ªæ€•æœ‰ 10 å°ç”µæœºåŒæ—¶ä¸Šç”µï¼Œå®ƒä»¬çš„ç™½å™ªå£°åºåˆ—ä¹Ÿæ˜¯é”™å¼€çš„ï¼Œç»ä¸å‘ç”Ÿå…±æŒ¯æ‹é¢‘ã€‚
         prng_state ^= (uint32_t)gIMT.M * 12345UL; 
         init_flag = 1;
     }
 
-    // 2. Xorshift ×´Ì¬ÍÆ½ø£º×Ô¼º³Ô×Ô¼º£¬²úÉúÕæÕıµÄÓ²¼ş¼¶Î±Ëæ»úĞòÁĞ
+    // 2. Xorshift çŠ¶æ€æ¨è¿›ï¼šè‡ªå·±åƒè‡ªå·±ï¼Œäº§ç”ŸçœŸæ­£çš„ç¡¬ä»¶çº§ä¼ªéšæœºåºåˆ—
     prng_state ^= prng_state << 13;
     prng_state ^= prng_state >> 17;
     prng_state ^= prng_state << 5;
 
-    // 3. ÌáÈ¡Ëæ»úÊı²¢ÏŞÖÆ·¶Î§ (-28 ~ +28)
-    // 57 ¼´ (28 * 2 + 1)¡£Ç¿ÖÆÊ¹ÓÃ´ø·ûºÅµÄ int16_t ½ÓÊÕ£¬³¹µ×¶Å¾øÏÂÒç³ö±ä 65535 Õ¨¹ÜµÄ·çÏÕ¡£
+    // 3. æå–éšæœºæ•°å¹¶é™åˆ¶èŒƒå›´ (-28 ~ +28)
+    // 57 å³ (28 * 2 + 1)ã€‚å¼ºåˆ¶ä½¿ç”¨å¸¦ç¬¦å·çš„ int16_t æ¥æ”¶ï¼Œå½»åº•æœç»ä¸‹æº¢å‡ºå˜ 65535 ç‚¸ç®¡çš„é£é™©ã€‚
     int16_t rand_num = (int16_t)(prng_state % 57) - 28;
 
-    // 4. ¼ÆËã»ù´¡ PWM Æ«ÖÃ (´Ë´¦Èç¹û m_node_id ÔÚÔËĞĞÊ±²»¸Ä±ä£¬Êµ¼ÊÉÏ»á±»±àÒëÆ÷ÓÅ»¯Îª³£Êı)
+    // 4. è®¡ç®—åŸºç¡€ PWM åç½® (æ­¤å¤„å¦‚æœ m_node_id åœ¨è¿è¡Œæ—¶ä¸æ”¹å˜ï¼Œå®é™…ä¸Šä¼šè¢«ç¼–è¯‘å™¨ä¼˜åŒ–ä¸ºå¸¸æ•°)
     int16_t base_offset = (int16_t)(((m_node_id % 5) - 1) * 47);
 
-    // 5. Ó¦ÓÃ×îÖÕÖÜÆÚ£¬È«³Ì´ø·ûºÅÔËËã£¬°²È«¿É¿¿
+    // 5. åº”ç”¨æœ€ç»ˆå‘¨æœŸï¼Œå…¨ç¨‹å¸¦ç¬¦å·è¿ç®—ï¼Œå®‰å…¨å¯é 
     gPWM.gPWMPrdApply = 2637 - base_offset + rand_num;
 
     if (gMainCmd.Command.bit.Start == TRUE)
     {
-        // pm_check_ip_flag = PE.18 Æô¶¯ÊÇ·ñ¼ì²â³õÊ¼Î»ÖÃ...
-        // Ê¹ÄÜºó£¬¿ªÊ¼¼ì²âÎ»ÖÃ£¬È»ºó½«¸ÃÎ»ÖÃ 0£¬
+        // pm_check_ip_flag = PE.18 å¯åŠ¨æ˜¯å¦æ£€æµ‹åˆå§‹ä½ç½®...
+        // ä½¿èƒ½åï¼Œå¼€å§‹æ£€æµ‹ä½ç½®ï¼Œç„¶åå°†è¯¥ä½ç½® 0ï¼Œ
         if ((gMainCmd.Command.bit.StartDC == 1) ||
-            (gMainCmd.Command.bit.StopDC  == 1)) /****Á÷ÖÆ¶¯×´Ì¬****/
+            (gMainCmd.Command.bit.StopDC  == 1)) /****æµåˆ¶åŠ¨çŠ¶æ€****/
         {
             // OutPhase -32767 ~ 32767, that is -180 ~ 180degree.
             // 60degree ~ 10922...
@@ -1863,7 +1881,7 @@ void MotorControlISR()
         //        RecordEnable = 0;
     }
 
-//    CBCLimitCurPrepare();                   //Öğ²¨ÏŞÁ÷±£»¤³ÌĞò
+//    CBCLimitCurPrepare();                   //é€æ³¢é™æµä¿æŠ¤ç¨‹åº
 #if 0
 static int RecordEnable;
 //if (gMainCmd.Command.bit.Start == 1 && gMainCmd.Command.bit.StartDC == 1) {
@@ -1932,7 +1950,7 @@ void ChangeCurrent_2ms(void)
     // output power calculation here
     ////////////////////////////////
     {
-        // ±ÜÃâ³öÏÖ¸ºÊıÊ±ºò¼ÆËã³öÀ´µÄTemp ·Ç³£´ó...
+        // é¿å…å‡ºç°è´Ÿæ•°æ—¶å€™è®¡ç®—å‡ºæ¥çš„Temp éå¸¸å¤§...
         signed short TorqueCurAbs;
         TorqueCurAbs = gIMT.T;
         if (TorqueCurAbs < 0) {
@@ -1942,7 +1960,7 @@ void ChangeCurrent_2ms(void)
         // add 128 as min flux current
         TorqueCurAbs += 128;
 
-        m_Temp = (long)TorqueCurAbs * 200 >> 12;        // 100¡¡~ 1.00A
+        m_Temp = (long)TorqueCurAbs * 200 >> 12;        // 100ã€€~ 1.00A
         m_Temp *= 220;                                  // 100 * 220 = 220w(22000)
         m_Temp = (long)m_Temp * gRatio >> 12;           // Ratio, 2048..
         m_Temp /= 100;

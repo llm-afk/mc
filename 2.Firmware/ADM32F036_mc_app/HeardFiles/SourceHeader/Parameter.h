@@ -13,16 +13,16 @@ extern unsigned int  OVER_DC_VOL_KP;
 extern unsigned int MaxAllowUdcLimit;
 extern unsigned int MidAllowUdcLimit;
 
-extern unsigned int OverCurPointInternal;   // Ó²¼ş¹ıÁ÷±È½ÏÖµ
-extern unsigned int CBCCurPointInternal;    // CBC¹ıÁ÷±È½ÏÖµ
+extern unsigned int OverCurPointInternal;   // ç¡¬ä»¶è¿‡æµæ¯”è¾ƒå€¼
+extern unsigned int CBCCurPointInternal;    // CBCè¿‡æµæ¯”è¾ƒå€¼
 
 extern unsigned int DeadTimeInternal;
 extern unsigned int DeadTimeCompInternal;
 
 ///////////////////////////////////////////////////////////////////////////////////////
-// µç»ú²ÎÊıÉèÖÃ
+// ç”µæœºå‚æ•°è®¾ç½®
 ///////////////////////////////////////////////////////////////////////////////////////
-extern unsigned int MOTOR_RATED_POWER;    //0.1WÎªµ¥Î»
+extern unsigned int MOTOR_RATED_POWER;    //0.1Wä¸ºå•ä½
 extern unsigned int MOTOR_RATED_VOL;
 extern unsigned int MOTOR_RATED_CUR;
 extern unsigned int LOWER_LIMIT_FREQ;
@@ -38,15 +38,15 @@ extern unsigned int PMSM_KE;           // ke = 4
 #endif
 
 ///////////////////////////////////////////////////////////////////////////////////////
-// ¿ª»·ÇĞ»»±Õ»·²ÎÊıÉèÖÃ
+// å¼€ç¯åˆ‡æ¢é—­ç¯å‚æ•°è®¾ç½®
 ///////////////////////////////////////////////////////////////////////////////////////
-extern unsigned int FRQ_OPEN_TO_CLOSE;    // Òª¼ÆËãÒ»ÏÂµ¥Î»£¬²»ÊÇ0.01HZ
-//extern unsigned int FULL_OPEN_LOOP_MODE;       // ¿ª»·Ä£Ê½£¬½ûÖ¹ÆÁ±Î¸ÃĞĞ
+extern unsigned int FRQ_OPEN_TO_CLOSE;    // è¦è®¡ç®—ä¸€ä¸‹å•ä½ï¼Œä¸æ˜¯0.01HZ
+//extern unsigned int FULL_OPEN_LOOP_MODE;       // å¼€ç¯æ¨¡å¼ï¼Œç¦æ­¢å±è”½è¯¥è¡Œ
 extern unsigned int OPEN_LOOP_TOR_START;
-extern unsigned int FRQ_PWM_SHIFT_EN;   // Òª¼ÆËãÒ»ÏÂµ¥Î»£¬²»ÊÇ0.01HZ
+extern unsigned int FRQ_PWM_SHIFT_EN;   // è¦è®¡ç®—ä¸€ä¸‹å•ä½ï¼Œä¸æ˜¯0.01HZ
 
 ///////////////////////////////////////////////////////////////////////////////////////
-// ËÙ¶È»·²ÎÊıÉèÖÃ
+// é€Ÿåº¦ç¯å‚æ•°è®¾ç½®
 ///////////////////////////////////////////////////////////////////////////////////////
 extern unsigned int F_CHANGING_POINT_1_PI;
 extern unsigned int F_CHANGING_POINT_2_PI;
@@ -56,13 +56,13 @@ extern unsigned int HIGH_SPEED_KI_GAIN;
 extern unsigned int HIGH_SPEED_KP_GAIN;
 
 ///////////////////////////////////////////////////////////////////////////////////////
-// ¿ØÖÆ²ÎÊıÉèÖÃ
+// æ§åˆ¶å‚æ•°è®¾ç½®
 ///////////////////////////////////////////////////////////////////////////////////////
-extern unsigned int PWM_FREQUENCY;     // 100 * 0.1kHz ÔØ²¨ÆµÂÊ
+extern unsigned int PWM_FREQUENCY;     // 100 * 0.1kHz è½½æ³¢é¢‘ç‡
 extern unsigned int AVR_MODE;
 
 ///////////////////////////////////////////////////////////////////////////////////////
-// µçÁ÷»·»·²ÎÊıÉèÖÃ
+// ç”µæµç¯ç¯å‚æ•°è®¾ç½®
 ///////////////////////////////////////////////////////////////////////////////////////
 extern unsigned int D_CUR_KI;
 extern unsigned int D_CUR_KP;
@@ -70,12 +70,12 @@ extern unsigned int Q_CUR_KI;
 extern unsigned int Q_CUR_KP;
 
 
-//--------------------- ÆµÂÊ·¶Î§²ÎÊı----------------------/
+//--------------------- é¢‘ç‡èŒƒå›´å‚æ•°----------------------/
 extern unsigned int MAX_LIMIT_FREQ;   // 300.00Hz
 extern unsigned int MOTOR_RATED_FRE;
-extern unsigned int COAST_STOP_FRQ;    // 1.0HZ,×ÔÓÉÍ£»úÆğÊ¼ÆµÂÊ
+extern unsigned int COAST_STOP_FRQ;    // 1.0HZ,è‡ªç”±åœæœºèµ·å§‹é¢‘ç‡
 
-//--------------------- Ö±Á÷ÖÆ¶¯²ÎÊı----------------------/
+//--------------------- ç›´æµåˆ¶åŠ¨å‚æ•°----------------------/
 extern unsigned int DC_CONTROL_KP;
 extern unsigned int DC_CONTROL_KI;
 extern unsigned int DC_BRAKE_CUR;
@@ -88,9 +88,9 @@ extern unsigned int FILED_WEEKING_MODE;         // FE-00, 0 ~ 2
 extern unsigned int FILED_WEEKING_CUR_SCAL;     // FE-01, 0 ~ 200
 extern unsigned int FILED_WEEKING_SCAL;         // FE-02, 1 ~ 10
 extern unsigned int FIELD_WEAK_REF;             // FE-05, 0 ~ 4100
-extern unsigned int IPD_PERIOD_SCALING;         // ±ÜÃâ¸ü»»µç»úºóµç¸ĞÌØ±ğĞ¡µ¼ÖÂÔËĞĞµçÁ÷ºÜ´ó
+extern unsigned int IPD_PERIOD_SCALING;         // é¿å…æ›´æ¢ç”µæœºåç”µæ„Ÿç‰¹åˆ«å°å¯¼è‡´è¿è¡Œç”µæµå¾ˆå¤§
 extern unsigned int SOFT_OC_POINT;              // Current limit : 3A,150%
-extern unsigned int IdMaxScaling;               // Èõ´ÅµçÁ÷Õ¼×î´óµçÁ÷°Ù·Ö±È£¬512 ¾ÍÊÇ50%£¬Q10 ¸ñÊ½
+extern unsigned int IdMaxScaling;               // å¼±ç£ç”µæµå æœ€å¤§ç”µæµç™¾åˆ†æ¯”ï¼Œ512 å°±æ˜¯50%ï¼ŒQ10 æ ¼å¼
 extern unsigned int IqMaxSet;                   // NOT USED
 
 extern unsigned int STALL_PR_TIME;              // 8s, 8000ms
@@ -136,7 +136,7 @@ extern unsigned int RatiotThresholdForLowNoisePWM;
 #define ADM32F036_TYPE                  ADM32F036_A2
 //#define SPI_SCOPE_TEST                  1
 
-// ¹ÊÕÏ»Ö¸´Ê±¼äÉèÖÃ
+// æ•…éšœæ¢å¤æ—¶é—´è®¾ç½®
 #define VOLT_FAULT_RECOVER_TIME        (2000)
 #define CURRENT_FAULT_RECOVER_TIME     (2000)
 #define STALL_FAULT_RECOVER_TIME       (2000)
@@ -149,11 +149,15 @@ extern unsigned int RatiotThresholdForLowNoisePWM;
 #define YellowLED_OFF               GpioDataRegs.GPACLEAR.bit.GPIO18    = 1
 
 #define TRIP_FLASHING_TIME          100
-#define WAIT_POWER_ON_TIME          10000       // ½øÈëÖ÷³ÌĞòÖ®ºó£¬µÈ´ı_*0.5ms¿ªÊ¼ÏìÓ¦Ç·Ñ¹´¦ÀíºÍÔËĞĞÃüÁî
+#define WAIT_POWER_ON_TIME          10000       // è¿›å…¥ä¸»ç¨‹åºä¹‹åï¼Œç­‰å¾…_*0.5mså¼€å§‹å“åº”æ¬ å‹å¤„ç†å’Œè¿è¡Œå‘½ä»¤
 
 #define LD_LQ_BASED_ON_CUR          1
 extern int MTPA_Ld_TableData_H[20];
 extern int MTPA_Lq_TableData_H[20];
+
+// ADCé›¶åè‡ªæ£€é˜ˆå€¼ï¼ˆ16ä½å¯¹é½ç©ºé—´ï¼ŒErr = ADC_16bit - 32768ï¼‰
+// ç­‰æ•ˆ12ä½é˜ˆå€¼500 â†’ 16ä½ = 500 << 4 = 8000
+#define ADC_OFFSET_THRESHOLD_16BIT  8000    // å…è®¸çš„æœ€å¤§é›¶ååç§»
 
 #endif // __F_PARAMETER_H__
 

@@ -8,7 +8,7 @@ motor_ctrl_t motor_ctrl = {
     .state = INIT,
 };
 
-// Ç°ÖÃÉùÃ÷
+// å‰ç½®å£°æ˜
 static void motor_fault_shutdown(tErrorCode err);
 static void motor_fault_recover(tErrorCode err);
 void set_err(tErrorCode err);
@@ -42,7 +42,7 @@ static void estimate_phase_resistance(void)
     #define STALL_HOLD_TICKS  20   // 200ms @ 100Hz
     static uint16_t stall_ticks = 0;
 
-    // ¹ÜÀí¶Â×ªÌõ¼şÀÛ¼Æ¼ÆÊıÆ÷
+    // ç®¡ç†å µè½¬æ¡ä»¶ç´¯è®¡è®¡æ•°å™¨
     if (I2 > 100.0f && fabsf(elec_speed) < 10.0f)
     {
         if (stall_ticks < STALL_HOLD_TICKS) stall_ticks++;
@@ -52,7 +52,7 @@ static void estimate_phase_resistance(void)
         stall_ticks = 0;
     }
 
-    // ÀÛ¼ÆÂú 200ms ²Å¹ÀËã£¬·ñÔòÊ¼ÖÕ½µÎÂ
+    // ç´¯è®¡æ»¡ 200ms æ‰ä¼°ç®—ï¼Œå¦åˆ™å§‹ç»ˆé™æ¸©
     if (stall_ticks >= STALL_HOLD_TICKS)
     {
         // Read actual phase voltage from PWM compare registers (FOC mode)
@@ -93,17 +93,15 @@ static void estimate_phase_resistance(void)
     if (g_temp < 25.0f) g_temp = 25.0f;   // floor at ambient
 }
 
-// ¹ÊÕÏĞ±ÆÂ×´Ì¬£¨MIT ÄÚ²¿Ê¹ÓÃ£©
-static int32_t fault_ramp_tick      = 0;
-static int32_t fault_ramp_iq_start  = 0;
-static int32_t fault_ramp_id_start  = 0;
+// æ•…éšœé˜»å°¼è®¡æ—¶å™¨ï¼ˆMIT å†…éƒ¨ä½¿ç”¨ï¼‰
+static int32_t fault_damp_timer = 0;
 
 #pragma CODE_SECTION(MC_controlword_update, "ramfuncs");
 int MC_controlword_update(void)
 {
     switch(ODObjs.control_word & 0x00FF)
     {
-        case CW_CMD_OPERATION_ENABLE: // Ê¹ÄÜµç»ú
+        case CW_CMD_OPERATION_ENABLE: // ä½¿èƒ½ç”µæœº
         {
             if(RunSignal == 0)
             {
@@ -111,7 +109,7 @@ int MC_controlword_update(void)
             }
             break;
         }
-        case CW_CMD_OPERATION_DISABLE: // Ê§ÄÜµç»ú
+        case CW_CMD_OPERATION_DISABLE: // å¤±èƒ½ç”µæœº
         {
             if(RunSignal == 1)
             {
@@ -119,23 +117,23 @@ int MC_controlword_update(void)
             }
             break;
         }
-        case CW_CMD_RESET_HOME: // ¸´Î»Ô­µã
+        case CW_CMD_RESET_HOME: // å¤ä½åŸç‚¹
         {
             break;
         }
-        case CW_CMD_ERROR_RESET: // ´íÎóÇå³ı
+        case CW_CMD_ERROR_RESET: // é”™è¯¯æ¸…é™¤
         {
-            // Ö»ÔÊĞíÇå³ıÆÕÍ¨Èí¹ÊÕÏ£¬±ØĞë±£Áô SNËø ºÍ ±àÂëÆ÷Î´±ê¶¨Ëø
+            // åªå…è®¸æ¸…é™¤æ™®é€šè½¯æ•…éšœï¼Œå¿…é¡»ä¿ç•™ SNé” å’Œ ç¼–ç å™¨æœªæ ‡å®šé”
             ODObjs.error_code &= (ERR_NO_SN | ERR_ENC_CALIB);
-            // ¡¾FIX¡¿Èç¹ûµç»úÒÑ¾­Í£ÎÈ£¬ÔÊĞíÍ¨¹ı¸´Î»Ö¸Áî»Øµ½ INIT ÖØĞÂ´ıÃü
+            // ã€FIXã€‘å¦‚æœç”µæœºå·²ç»åœç¨³ï¼Œå…è®¸é€šè¿‡å¤ä½æŒ‡ä»¤å›åˆ° INIT é‡æ–°å¾…å‘½
             if(motor_ctrl.state == STOPPED) 
             {
                 motor_ctrl.state = INIT;
-                fault_ramp_tick = 0;
+                fault_damp_timer = 0;
             }
             break;
         }
-        case CW_CMD_DEV_ENCODER_CALIB: // ±àÂëÆ÷Ğ£×¼
+        case CW_CMD_DEV_ENCODER_CALIB: // ç¼–ç å™¨æ ¡å‡†
         {
             if(!HAS_ERR(ERR_NO_SN))
             {
@@ -154,30 +152,30 @@ int MC_controlword_update(void)
 }
 
 /**
- * @brief µç»ú×´Ì¬¿ØÖÆÖ÷Ñ­»·
- * @note ·ÅÔÚstimer¿ò¼ÜÏÂ2KhzÑ­»·Ö´ĞĞ
+ * @brief ç”µæœºçŠ¶æ€æ§åˆ¶ä¸»å¾ªç¯
+ * @note æ”¾åœ¨stimeræ¡†æ¶ä¸‹2Khzå¾ªç¯æ‰§è¡Œ
  */
 #pragma CODE_SECTION(MC_servo_loop, "ramfuncs");
 void MC_servo_loop(void)
 {
     // =========================================================================
-    // ¡¾ÖÕ¼«·ÀÒç³ö & Áã¾«¶ÈËğÊ§¼ÆËã·¨¡¿
-    // 1. »ñÈ¡´¿¾»µÄ×Ü Tick Êı (64Î»)£¬ÓÀ²»Òç³ö
+    // ã€ç»ˆæé˜²æº¢å‡º & é›¶ç²¾åº¦æŸå¤±è®¡ç®—æ³•ã€‘
+    // 1. è·å–çº¯å‡€çš„æ€» Tick æ•° (64ä½)ï¼Œæ°¸ä¸æº¢å‡º
     // =========================================================================
-    int64_t total_ticks = ((int64_t)encoder.enc_turns << 14)  // µÈĞ§ÓÚ * 16384
+    int64_t total_ticks = ((int64_t)encoder.enc_turns << 14)  // ç­‰æ•ˆäº * 16384
                         + (int32_t)((int16_t)encoder.enc_degree_lined + (int16_t)encoder.in_enc_deg_zero)
                         - (int32_t)encoder.error * 18;
 
     // =========================================================================
-    // 2. ½«¸¡µã³Ë³ı×ª»»Îª Q30 ¸ñÊ½µÄ 64Î»¶¨µã³Ë·¨
+    // 2. å°†æµ®ç‚¹ä¹˜é™¤è½¬æ¢ä¸º Q30 æ ¼å¼çš„ 64ä½å®šç‚¹ä¹˜æ³•
     // =========================================================================
     encoder.degree_q14 = (-(total_ticks * 562203932LL) >> 30) + 8565;
     
-    // ¼ÙÉè GEAR_RATIO_INV ÊÇ³£Á¿ºê
+    // å‡è®¾ GEAR_RATIO_INV æ˜¯å¸¸é‡å®
     encoder.velocity_q14 = (int32_t)(encoder.enc_velocity_q14 * GEAR_RATIO_INV);
 
     // =========================================================================
-    // ¡¾ÓÅ»¯ 2¡¿ÓÅ»¯ 64 Î»Êı¾İµÄ¾ø¶ÔÖµ¼ÆËãÓëÍ»±äÂË²¨
+    // ã€ä¼˜åŒ– 2ã€‘ä¼˜åŒ– 64 ä½æ•°æ®çš„ç»å¯¹å€¼è®¡ç®—ä¸çªå˜æ»¤æ³¢
     // =========================================================================
     static int64_t degree_q14_last = 0;
     static int16_t first_flag = 0;
@@ -200,7 +198,7 @@ void MC_servo_loop(void)
     {
         case INIT:
         {
-            // Èç¹û´æÔÚÎ´Çå³ıµÄ´íÎó£¬²»ÔÊĞí½øÈë MIT
+            // å¦‚æœå­˜åœ¨æœªæ¸…é™¤çš„é”™è¯¯ï¼Œä¸å…è®¸è¿›å…¥ MIT
             if(ODObjs.error_code == 0)
             {
                 motor_ctrl.state = MIT;
@@ -210,7 +208,7 @@ void MC_servo_loop(void)
         case MIT:
         {
             // =========================================================================
-            // ¡¾ºËĞÄÓÅ»¯ 3¡¿64Î»°²È«½µÎ¬£¬¼¤»î DSP µ¥ÖÜÆÚ³Ë·¨Æ÷
+            // ã€æ ¸å¿ƒä¼˜åŒ– 3ã€‘64ä½å®‰å…¨é™ç»´ï¼Œæ¿€æ´» DSP å•å‘¨æœŸä¹˜æ³•å™¨
             // =========================================================================
             int64_t raw_degree_err = motor_ctrl.degree_ref_q14 - encoder.degree_q14;
             int64_t raw_velocity_err = motor_ctrl.velocity_ref_q14 - encoder.velocity_q14;
@@ -226,7 +224,7 @@ void MC_servo_loop(void)
             else velocity_err_q14 = (int32_t)raw_velocity_err;
 
             // =========================================================================
-            // ¡¾ÓÅ»¯ 4¡¿±àÒëÆÚºÏ²¢³£Á¿
+            // ã€ä¼˜åŒ– 4ã€‘ç¼–è¯‘æœŸåˆå¹¶å¸¸é‡
             // =========================================================================
             #define MIT_TERM_SCALE (MOTOR_RATED_CUR * 1.41421356f / 40960.0f)
             #define MIT_IQ_SCALE   (40960.0f / (MOTOR_RATED_CUR * 1.41421356f))
@@ -237,7 +235,7 @@ void MC_servo_loop(void)
             int32_t out_q14 = p_term + d_term + motor_ctrl.torque_ref_q14; 
 
             // =========================================================================
-            // ¡¾ÓÅ»¯ 5¡¿ÏŞ·ùÁ´
+            // ã€ä¼˜åŒ– 5ã€‘é™å¹…é“¾
             // =========================================================================
             #define MOTOR_TORQUE_MAX  30.0f                                   
             #define DRV_IQ_MAX        ((int32_t)(35.0f * MIT_IQ_SCALE))      
@@ -260,39 +258,35 @@ void MC_servo_loop(void)
 #endif
 
             // =========================================================================
-            // ¡¾FIX¡¿Èí¼±Í£±Õ»·±£»¤£ºÈ·±£ S ÇúÏßË¥¼õ²»±»´ò¶Ï
+            // ã€FIXã€‘æ•…éšœé˜»å°¼ä¿æŠ¤ï¼šå›ºå®š Kd + å›ºå®š 5 ç§’ååœæœº
             // =========================================================================
-            #define FAULT_RAMP_TICKS 2000  // @ 2kHz = 1 Ãë
-            
-            // Ö»ÒªÓĞ´íÎó£¬»òÕß¼±Í£¹ı³ÌÒÑ¾­¿ªÊ¼£¬¾Í±ØĞëÇ¿ÖÆ×ßÍêĞ±ÆÂ£¬¾Ü¾øÖĞÍ¾ÇĞ»Ø INIT
-            if(ODObjs.error_code != 0 || fault_ramp_tick > 0)
+            #define FAULT_DAMP_TICKS   10000          // @ 2kHz = 5 ç§’
+            #define FAULT_DAMP_KD_Q14  (16400u * 1u) 
+
+            if(ODObjs.error_code != 0 || fault_damp_timer > 0)
             {
-                if(fault_ramp_tick == 0)
+                // Kd-only é˜»å°¼ï¼šç›®æ ‡é€Ÿåº¦ = 0ï¼Œä½¿ç”¨å›ºå®š Kd ä¸ä¾èµ– CAN ä¸‹å‘å€¼
+                int32_t damp_out_q14 = (int32_t)(((int64_t)FAULT_DAMP_KD_Q14 * (-encoder.velocity_q14)) >> 14);
+
+                int32_t damp_limit = (int32_t)(ODObjs.torque_limit * 16384.0f);
+                if(damp_out_q14 > damp_limit) damp_out_q14 = damp_limit;
+                else if(damp_out_q14 < -damp_limit) damp_out_q14 = -damp_limit;
+
+                Iq = (int32_t)(Torque_To_Iq((float)(-damp_out_q14) * 0.00006103515625f) * MIT_IQ_SCALE);
+                if(Iq > DRV_IQ_MAX) Iq = DRV_IQ_MAX;
+                else if(Iq < -DRV_IQ_MAX) Iq = -DRV_IQ_MAX;
+                Id = 0;
+
+                fault_damp_timer++;
+
+                if(fault_damp_timer >= FAULT_DAMP_TICKS)
                 {
-                    // ½öÔÚÊ×´Î´¥·¢¼±Í£Ê±²¶»ñµ±Ç°µçÁ÷¡£·ÀÖ¹¶àÖØ¹ÊÕÏÒı·¢µÄ¶à´Î²¶»ñµ¼ÖÂµçÁ÷Í»Ìø
-                    fault_ramp_iq_start = Iq;
-                    fault_ramp_id_start = Id;
-                }
-                
-                if(fault_ramp_tick < FAULT_RAMP_TICKS)
-                {
-                    float t = (float)fault_ramp_tick * (1.0f / (float)FAULT_RAMP_TICKS);
-                    float s = t * t * (3.0f - 2.0f * t);  // smoothstep Æ½»¬Ë¥¼õ
-                    Iq = (int32_t)((float)fault_ramp_iq_start * (1.0f - s));
-                    Id = (int32_t)((float)fault_ramp_id_start * (1.0f - s));
-                    fault_ramp_tick++;
-                }
-                else
-                {
-                    // Ğ±ÆÂ×ßÍê£¬µçÁ÷³¹µ×¹éÁã
-                    Iq = 0;
-                    Id = 0;
-                    motor_ctrl.state = STOPPED; 
+                    motor_ctrl.state = STOPPED;
                 }
             }
             else
             {
-                fault_ramp_tick = 0;  // ÎŞ¹ÊÕÏÇÒÕı³£ÔËĞĞ£¬±£³Ö¸´Î»
+                fault_damp_timer = 0;  // æ— æ•…éšœä¸”æ­£å¸¸è¿è¡Œï¼Œä¿æŒå¤ä½
             }
             break;
         }
@@ -318,11 +312,11 @@ void MC_servo_loop(void)
         {
             Iq = 0;
             Id = 0;
-            // ¡¾FIX¡¿µ±µç»úÒÑ¾­ÍêÈ«Í£ÎÈÇÒËùÓĞ´íÎó±êÖ¾ÒÑ±»ºóÌ¨Çå³ı£¬×Ô¶¯ÇĞ»Ø INIT ´ıÃü
+            // ã€FIXã€‘å½“ç”µæœºå·²ç»å®Œå…¨åœç¨³ä¸”æ‰€æœ‰é”™è¯¯æ ‡å¿—å·²è¢«åå°æ¸…é™¤ï¼Œè‡ªåŠ¨åˆ‡å› INIT å¾…å‘½
             if (ODObjs.error_code == 0) 
             {
                 motor_ctrl.state = INIT;
-                fault_ramp_tick = 0;
+                fault_damp_timer = 0;
             }
             break;
         }
@@ -334,7 +328,7 @@ void MC_servo_loop(void)
 }
 
 /**
- * @brief ÖÃÎ»´íÎó
+ * @brief ç½®ä½é”™è¯¯
  */
 void set_err(tErrorCode err)
 {
@@ -345,7 +339,7 @@ void set_err(tErrorCode err)
 }
 
 /**
- * @brief Çå³ı´íÎó
+ * @brief æ¸…é™¤é”™è¯¯
  */
 void clr_err(tErrorCode err)
 {
@@ -356,23 +350,19 @@ void clr_err(tErrorCode err)
 }
 
 /**
- * @brief Í³Ò»±£»¤¹Ø»ú ¡ª¡ª ±¨´í
+ * @brief ç»Ÿä¸€ä¿æŠ¤å…³æœº â€”â€” æŠ¥é”™
  */
 static void motor_fault_shutdown(tErrorCode err)
 {
     set_err(err);
-    // ¡¾FIX¡¿ÕâÀï²»ÔÙÇåÁã fault_ramp_tick¡£
-    // ÈÃ MIT ×´Ì¬»ú¸ù¾İ¹ÊÕÏ±êÖ¾Î»×ÔÖ÷Æô¶¯Ğ±ÆÂ£»Èç¹ûÊÇ¶àÖØ¹ÊÕÏÁ¬·¢£¬Ò²ÄÜ±£Ö¤Ğ±ÆÂÆ½ÎÈÑÓĞø²»±»´ò¶Ï¡£
 }
 
 /**
- * @brief Í³Ò»±£»¤»Ö¸´ ¡ª¡ª Çå´í
+ * @brief ç»Ÿä¸€ä¿æŠ¤æ¢å¤ â€”â€” æ¸…é”™
  */
 static void motor_fault_recover(tErrorCode err)
 {
     clr_err(err);
-    // ¡¾FIX¡¿²»ÔÙÔÚÕâÀïÇ¿ÖÆ¸ÉÉæµç»ú×´Ì¬£¬×´Ì¬×ª»»Í³Ò»½»¸ø MC_servo_loop ÀïµÄ STOPPED ÅĞ¶Ï´¦Àí¡£
-    // ÕâÑùÄÜÈ·±£Ö»ÓĞµç»úÍêÈ«Í£ÎÈºó£¬²ÅÄÜ»Ö¸´ÔËĞĞ£¬³¹µ×¶Å¾ø¼±Í£±»°ëÂ·´ò¶ÏµÄ³é¶¯ÎÊÌâ¡£
 }
 
 float board_temp;
@@ -387,8 +377,8 @@ extern uint16_t heatbeat_flag;
 extern float torque;
 
 /**
- * @brief ²É¼¯µç»ú¿ØÖÆÏà¹ØÊı¾İ
- * @note ·ÅÔÚstimer¿ò¼ÜÏÂ100hzÑ­»·Ö´ĞĞ
+ * @brief é‡‡é›†ç”µæœºæ§åˆ¶ç›¸å…³æ•°æ®
+ * @note æ”¾åœ¨stimeræ¡†æ¶ä¸‹100hzå¾ªç¯æ‰§è¡Œ
  */
 void info_collect_loop(void)
 {
@@ -401,12 +391,25 @@ void info_collect_loop(void)
         }
     }
 
+    /* â”€â”€ ADC é›¶åè‡ªæ£€ï¼ˆä¸€æ¬¡æ€§ï¼‰ â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+    {
+        static uint16_t adc_offset_checked = 0;
+        if(!adc_offset_checked && g_adc_offset_ready)
+        {
+            adc_offset_checked = 1;
+            if(check_adc_offset_threshold() != 0)
+            {
+                set_err(ERR_ADC_SELFTEST);
+            }
+        }
+    }
+
     static float board_temp_filt;
     static float motor_temp_filt;
     static uint16_t temp_filt_inited = 0;
     const float alpha = 0.001f;
 
-    // ÊıÑ§»¯¼òÂß¼­±£³Ö²»±ä
+    // æ•°å­¦åŒ–ç®€é€»è¾‘ä¿æŒä¸å˜
     float adc_drv = (float)ADC_NTC;   
     float adc_mot = (float)ADC_NTC_M; 
     float ratio_drv = adc_drv / (4095.0f - adc_drv);
@@ -428,14 +431,14 @@ void info_collect_loop(void)
     board_temp = board_temp_filt;
     motor_temp = motor_temp_filt;
 
-    /* -------- Í³Ò»±£»¤Âß¼­ -------- */
+    /* -------- ç»Ÿä¸€ä¿æŠ¤é€»è¾‘ -------- */
     
-    // 1. µç»ú¹ıÎÂ±£»¤
+    // 1. ç”µæœºè¿‡æ¸©ä¿æŠ¤
     if(!(HAS_ERR(ERR_OVER_TEMP_MOTOR)) && (motor_temp > ODObjs.over_temp_motor_level))
     {
         motor_fault_shutdown(ERR_OVER_TEMP_MOTOR);
     }
-    if(HAS_ERR(ERR_OVER_TEMP_MOTOR)) // ¡¾ĞŞ¸´À¨ºÅ²¹Æë¡¿
+    if(HAS_ERR(ERR_OVER_TEMP_MOTOR)) // ã€ä¿®å¤æ‹¬å·è¡¥é½ã€‘
     {
         if(motor_temp < ODObjs.over_temp_motor_level - 20.0f)
         {
@@ -443,12 +446,12 @@ void info_collect_loop(void)
         }
     }
 
-    // 2. Çı¶¯Æ÷¹ıÎÂ±£»¤
+    // 2. é©±åŠ¨å™¨è¿‡æ¸©ä¿æŠ¤
     if(!(HAS_ERR(ERR_OVER_TEMP_DRV)) && (board_temp > ODObjs.over_temp_drv_level))
     {
         motor_fault_shutdown(ERR_OVER_TEMP_DRV);
     }
-    if(HAS_ERR(ERR_OVER_TEMP_DRV)) // ¡¾ĞŞ¸´À¨ºÅ²¹Æë¡¿
+    if(HAS_ERR(ERR_OVER_TEMP_DRV)) // ã€ä¿®å¤æ‹¬å·è¡¥é½ã€‘
     {
         if(board_temp < ODObjs.over_temp_drv_level - 20.0f)
         {
@@ -456,12 +459,12 @@ void info_collect_loop(void)
         }
     }
 
-    // // ¡¾FIX¡¿6. Ç·Ñ¹±£»¤£¨ÒÆ³ö CAN 10ÃëÃ¤Çø£¬È·±£Ó²¼şÉÏµçÁ¢¿Ì´¦ÓÚ±£»¤¼à²âÖĞ£©
+    // // ã€FIXã€‘6. æ¬ å‹ä¿æŠ¤ï¼ˆç§»å‡º CAN 10ç§’ç›²åŒºï¼Œç¡®ä¿ç¡¬ä»¶ä¸Šç”µç«‹åˆ»å¤„äºä¿æŠ¤ç›‘æµ‹ä¸­ï¼‰
     // if(!(HAS_ERR(ERR_UNDER_VOLTAGE)) && ((gUDC.uDCFilter * 0.1f) < under_v_level))
     // {
     //     motor_fault_shutdown(ERR_UNDER_VOLTAGE);
     // }
-    // if(HAS_ERR(ERR_UNDER_VOLTAGE)) // ¡¾ĞŞ¸´À¨ºÅ²¹Æë¡¿
+    // if(HAS_ERR(ERR_UNDER_VOLTAGE)) // ã€ä¿®å¤æ‹¬å·è¡¥é½ã€‘
     // {
     //     if((gUDC.uDCFilter * 0.1f) > under_v_level + 2.0f)
     //     {
@@ -483,7 +486,7 @@ void info_collect_loop(void)
         }
     }
 
-    /* -------- CAN ×´Ì¬»ú¼ì²â -------- */
+    /* -------- CAN çŠ¶æ€æœºæ£€æµ‹ -------- */
     static uint16_t can_delay_cnt = 0;
     if(can_delay_cnt < 1000)
     {
@@ -491,24 +494,24 @@ void info_collect_loop(void)
     }
     else
     {
-        // 4. ĞÄÌø³¬Ê±±£»¤£¨CAN FD Ö¡³¬Ê± 2.5s£©
+        // 4. å¿ƒè·³è¶…æ—¶ä¿æŠ¤ï¼ˆCAN FD å¸§è¶…æ—¶ 2.5sï¼‰
         if(ODObjs.heartbeat_consumer_enable)
         {
-            // Ö»ÒªÃ»µ½250£¬¾ÍÕı³£ÀÛ¼Ó£»µ½ÁË250¾ÍËøËÀ£¬µÈ´ıCAN½ÓÊÕÖĞ¶Ï½«ÆäÇåÁã
-            if(canfd_timeout_cnt < 250)
+            // åªè¦æ²¡åˆ°100ï¼Œå°±æ­£å¸¸ç´¯åŠ ï¼›åˆ°äº†100å°±é”æ­»ï¼Œç­‰å¾…CANæ¥æ”¶ä¸­æ–­å°†å…¶æ¸…é›¶
+            if(canfd_timeout_cnt < 100)
             {
                 canfd_timeout_cnt++;
             }
 
-            // ÅĞ¶Ïµ±Ç°×´Ì¬
-            if(canfd_timeout_cnt >= 250)
+            // åˆ¤æ–­å½“å‰çŠ¶æ€
+            if(canfd_timeout_cnt >= 100)
             {
                 canfd_frame_flag = 1;
                 motor_fault_shutdown(ERR_HEARTBEAT_TIMEOUT);
             }
             else
             {
-                // Èç¹û cnt < 250£¬ËµÃ÷Íâ²¿½ÓÊÕÖĞ¶Ï¸Õ¸ÕÇåÁã¹ıËü£¬Í¨ĞÅÒÑ¾­»Ö¸´£¡
+                // å¦‚æœ cnt < 100ï¼Œè¯´æ˜å¤–éƒ¨æ¥æ”¶ä¸­æ–­åˆšåˆšæ¸…é›¶è¿‡å®ƒï¼Œé€šä¿¡å·²ç»æ¢å¤ï¼
                 if(canfd_frame_flag && HAS_ERR(ERR_HEARTBEAT_TIMEOUT))
                 {
                     motor_fault_recover(ERR_HEARTBEAT_TIMEOUT);
@@ -517,7 +520,7 @@ void info_collect_loop(void)
             }
         }
 
-        // 5. CAN Bus-Off ±£»¤
+        // 5. CAN Bus-Off ä¿æŠ¤
         static uint32_t can_buf_off_cnt = 0;
         if(CanfdRegs.CFG_STAT.bit.BUSOFF)
         {
@@ -540,7 +543,7 @@ void info_collect_loop(void)
         }
     }
 
-    /* -------- ĞÄÌøÖ¡ -------- */
+    /* -------- å¿ƒè·³å¸§ -------- */
     static uint16_t heartbeat_cnt = 0;
     if(++heartbeat_cnt >= 100) 
     {

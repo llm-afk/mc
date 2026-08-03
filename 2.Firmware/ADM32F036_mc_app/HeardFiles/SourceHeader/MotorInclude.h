@@ -10,25 +10,25 @@ extern "C" {
 #include "Parameter.h"
 #include "SubPrgInclude.h"
 
-#define ERROR_NONE                0      // 0   -- ��
-//#define ERROR_OL_INVERTER         10     // 10 -- ��Ƶ������
-#define ERROR_OC_HARDWARE         12     // 12  -- Ӳ������
-#define ERROR_OV_ACC_SPEED        13     // 13  -- ����ѹ
-#define ERROR_UV                  14     // 14  -- Ƿѹ����
-#define ERROR_LOSE_PHASE_OUTPUT   15     // 15  -- ���ȱ��
-#define ERROR_OT_IGBT             16     // 16  -- ɢ��������
-#define ERROR_CURRENT_SAMPLE      17     // 17  -- ����������
-#define ERROR_TUNE                18     // 18  -- �����г����
-#define ERROR_STALL               20     // 20  -- �����ת����
-#define ERROR_NTC	              21     // 21  -- NTC����
-#define ERROR_NO_LOAD             22     // 22  -- ���ձ���
-#define ERROR_MOTOR_SHORT_TO_GND  23     // 23  -- ����Եض�·����
-#define ERROR_IPD_NO_MOTOR        32     // 21  -- IPD �޵��
-#define ERROR_OC_SOFTWARE         33     // 21  -- ��������
-#define ERROR_CBC                 41     // 41  -- ����������ʱ����
-#define ERROR_ERROR_KE            44     // 44  -- ��������
-#define ERROR_LIN            	  55     // 55  -- ͨѶ����
-#define ERROR_DRIVER              66     // 66  -- Ԥȡ����
+#define ERROR_NONE                0      // 0   -- 无
+//#define ERROR_OL_INVERTER         10     // 10 -- 变频器过载
+#define ERROR_OC_HARDWARE         12     // 12  -- 硬件电流
+#define ERROR_OV_ACC_SPEED        13     // 13  -- 过电压
+#define ERROR_UV                  14     // 14  -- 欠压故障
+#define ERROR_LOSE_PHASE_OUTPUT   15     // 15  -- 输出缺相
+#define ERROR_OT_IGBT             16     // 16  -- 散热器过热
+#define ERROR_CURRENT_SAMPLE      17     // 17  -- 电流检测故障
+#define ERROR_TUNE                18     // 18  -- 电机调谐故障
+#define ERROR_STALL               20     // 20  -- 电机堵转故障
+#define ERROR_NTC	              21     // 21  -- NTC故障
+#define ERROR_NO_LOAD             22     // 22  -- 干烧保护
+#define ERROR_MOTOR_SHORT_TO_GND  23     // 23  -- 电机对地短路故障
+#define ERROR_IPD_NO_MOTOR        32     // 21  -- IPD 无电机
+#define ERROR_OC_SOFTWARE         33     // 21  -- 软件过流
+#define ERROR_CBC                 41     // 41  -- 快速限流超时故障
+#define ERROR_ERROR_KE            44     // 44  -- 软件过流
+#define ERROR_LIN            	  55     // 55  -- 通讯故障
+#define ERROR_DRIVER              66     // 66  -- 预取故障
 
 #define T_PRD  (Uint16)(((unsigned long)DSP_CLOCK60 * 5000) / PWM_FREQUENCY)
 #define T_CC1  0
@@ -77,24 +77,24 @@ extern "C" {
 #define ADCTRIG_EPWM7_SOCA  17
 #define ADCTRIG_EPWM7_SOCB  18
 
-// ��оƬ��صļĴ�������
-#define PIE_VECTTABLE_ADCINT    PieVectTable.ADCINT1                    //ADC�ж�����
-#define ADC_CLEAR_INT_FLAG      AdcRegs.ADCINTFLGCLR.bit.ADCINT1 = 1    //���ADCģ����жϱ�־
+// 与芯片相关的寄存器定义
+#define PIE_VECTTABLE_ADCINT    PieVectTable.ADCINT1                    //ADC中断向量
+#define ADC_CLEAR_INT_FLAG      AdcRegs.ADCINTFLGCLR.bit.ADCINT1 = 1    //清除ADC模块的中断标志
 #define ADC_RESET_SEQUENCE      AdcRegs.SOCPRICTL.bit.RRPOINTER = 0x20  //reset the sequence
-#define ADC_START_CONVERSION   	AdcRegs.ADCSOCFRC1.all = 0xFFFF 		//��������AD
-#define ADC_END_CONVERSIN       AdcRegs.ADCINTFLG.bit.ADCINT1           //ADת����ɱ�־λ  
+#define ADC_START_CONVERSION   	AdcRegs.ADCSOCFRC1.all = 0xFFFF 		//软件启动AD
+#define ADC_END_CONVERSIN       AdcRegs.ADCINTFLG.bit.ADCINT1           //AD转换完成标志位  
 
 
-#define  ADC_VOLTAGE_08         ( 8L*65535/33)  // AD����0.8V��Ӧ�Ĳ���ֵ   28035AD��Χ��0-3.3V
-#define  ADC_VOLTAGE_10         (10L*65535/33)  // AD����1.0V��Ӧ�Ĳ���ֵ
-#define  ADC_VOLTAGE_20         (20L*65535/33)  // AD����2.0V��Ӧ�Ĳ���ֵ
-#define  ADC_VOLTAGE_25         (25L*65535/33)  // AD����2.5V��Ӧ�Ĳ���ֵ 
+#define  ADC_VOLTAGE_08         ( 8L*65535/33)  // AD输入0.8V对应的采样值   28035AD范围是0-3.3V
+#define  ADC_VOLTAGE_10         (10L*65535/33)  // AD输入1.0V对应的采样值
+#define  ADC_VOLTAGE_20         (20L*65535/33)  // AD输入2.0V对应的采样值
+#define  ADC_VOLTAGE_25         (25L*65535/33)  // AD输入2.5V对应的采样值 
  
 /************************************************************
-	 ����DSP��ADC����ڡ�GPIO������ڡ�GPIO�����
+	 定义DSP的ADC输入口、GPIO口输出口、GPIO输入口
 ************************************************************/
 #define DisConnectRelay()   	    GpioDataRegs.GPACLEAR.bit.GPIO8  = 1
-#define ConnectRelay()    	        GpioDataRegs.GPASET.bit.GPIO8  = 1    //�ϵ绺��̵�������
+#define ConnectRelay()    	        GpioDataRegs.GPASET.bit.GPIO8  = 1    //上电缓冲继电器控制
 #define DRIVE_ENABLE()              GpioDataRegs.GPASET.bit.GPIO31  = 1
 #define DRIVE_DISABLE()             GpioDataRegs.GPACLEAR.bit.GPIO31  = 1    //DRRIVER_EN
 #define RT485_I()                   GpioDataRegs.GPACLEAR.bit.GPIO19  = 1
@@ -123,16 +123,16 @@ extern "C" {
 	EDIS;                                       \
 
 /************************************************************
-��оƬ��صļĴ�������
+与芯片相关的寄存器定义
 ************************************************************/
-#define ADC_GND             (AdcResult.ADCRESULT3<<4)           //28035��������Ҷ��룬Ϊ�˸�2808���ݣ�����4λ
+#define ADC_GND             (AdcResult.ADCRESULT3<<4)           //28035采样结果右对齐，为了跟2808兼容，左移4位
 #if (CURRENT_SAMPLE_TYPE == CURRENT_SAMPLE_1SHUNT)
-#define	ADC_IV              (AdcResult.ADCRESULT0)              // ����ط�������Ӳ�������嵽DSP��ʱ�ӿڷ�����
+#define	ADC_IV              (AdcResult.ADCRESULT0)              // 这个地方是由于硬件驱动板到DSP版时接口反掉了
 #define ADC_IV1             (AdcResult.ADCRESULT1)
 #define	ADC_UDC				(AdcResult.ADCRESULT2<<4)
 #else
 #define ADC_IU               (AdcResult.ADCRESULT0<<4)
-#define ADC_IW               (AdcResult.ADCRESULT1<<4)          // ����ط�������Ӳ�������嵽DSP��ʱ�ӿڷ�����
+#define ADC_IW               (AdcResult.ADCRESULT1<<4)          // 这个地方是由于硬件驱动板到DSP版时接口反掉了
 #define ADC_IV               (AdcResult.ADCRESULT0<<4)
 #define ADC_UDC              (AdcResult.ADCRESULT2<<4)
 #endif
@@ -149,7 +149,7 @@ extern "C" {
 #define	ADC_TEMP			(AdcResult.ADCRESULT3)
 
 /************************************************************
- 	�˿ڶ���END
+ 	端口定义END
 ************************************************************/
 
 typedef struct BIT32_REG_DEF {
@@ -163,48 +163,48 @@ typedef union BIT32_GROUP_DEF {
 }BIT32_GROUP;
 
 /************************************************************
-	�ṹ���� BEGIN
+	结构定义 BEGIN
 ************************************************************/
-/*****************����Ϊ������Ϣ���ݽṹ********************/
+/*****************以下为基本信息数据结构********************/
 typedef struct INV_STRUCT_DEF {
-	Uint 	InvSimpleFlag;			//0�����ױ�Ƶ����1���п��ư��Ƶ��
-	Uint    InvVoltageType;         //��Ƶ����ѹ�ȼ���Ϣ
-	Uint 	InvTypeApply;			//ʵ��ʹ�õĻ��ͣ�P�ͻ� = G�ͻ�-1��
-	Uint 	InvType;				//�û����õĻ���
-	Uint 	GPType;					//1 G�ͻ��� 2 P�ͻ���
-	Uint 	InvCurrent;				//����õ��ı�Ƶ��������	��λ0.1A
-	Uint    InvOlCurrent;           //���ر���ʱʹ�õĶ����
-	Uint 	InvVolt;				//����õ��ı�Ƶ����ѹ��	��λ1V
-	Uint 	CurrentCoff;			//��Ƶ����������ϵ��  ��	��λ0.1%
-	Uint 	UDCCoff;				//��Ƶ��ĸ�ߵ�ѹ����ϵ����	��λ0.1%
-	Uint 	TempType;				//��Ƶ���¶�����ѡ��
-	Uint 	InvOverCurrent;			//������					��λ0.1%
-	Uint 	InvUpUDC;				//ĸ�߹�ѹ��				��λ0.1V
-	Uint 	InvUpUDCCoef;			//ĸ�߹�ѹ��ϵ��
-	Uint 	InvLowUDC;				//Ƿѹ��
-	Uint 	InvLowUDCCoef;			//Ƿѹ��ϵ��
+	Uint 	InvSimpleFlag;			//0：简易变频器；1：有控制板变频器
+	Uint    InvVoltageType;         //变频器电压等级信息
+	Uint 	InvTypeApply;			//实际使用的机型（P型机 = G型机-1）
+	Uint 	InvType;				//用户设置的机型
+	Uint 	GPType;					//1 G型机； 2 P型机器
+	Uint 	InvCurrent;				//查表得到的变频器电流，	单位0.1A
+	Uint    InvOlCurrent;           //过载保护时使用的额定电流
+	Uint 	InvVolt;				//查表得到的变频器电压，	单位1V
+	Uint 	CurrentCoff;			//变频器电流矫正系数  ，	单位0.1%
+	Uint 	UDCCoff;				//变频器母线电压矫正系数，	单位0.1%
+	Uint 	TempType;				//变频器温度曲线选择
+	Uint 	InvOverCurrent;			//过流点					单位0.1%
+	Uint 	InvUpUDC;				//母线过压点				单位0.1V
+	Uint 	InvUpUDCCoef;			//母线过压点系数
+	Uint 	InvLowUDC;				//欠压点
+	Uint 	InvLowUDCCoef;			//欠压点系数
 
-	Uint 	BaseUdc;				//ĸ�ߵ�ѹ��׼ 380V����Ϊ537.4V
-}INV_STRUCT;//��Ƶ��Ӳ����Ϣ�ṹ
+	Uint 	BaseUdc;				//母线电压基准 380V机器为537.4V
+}INV_STRUCT;//变频器硬件信息结构
 
 typedef struct MOTOR_STRUCT_DEF {
-	Uint 	Type;					//�첽����ͬ��������������
-	Uint 	Power;					//�������					��λ0.1KW
-	Uint 	Votage;					//�����ѹ					��λ1V
-	Uint 	CurrentGet;				//�������					��λ0.1A
-	Uint 	Frequency;				//���Ƶ��					��λ0.01Hz
-	Uint 	FreqPer;				//��ôֵ���Ƶ��
-	Uint 	Current;				//������ֵ					��λ0.1A
-	Uint	CurBaseCoff;			//������ֵ�ķŴ���
-}MOTOR_STRUCT;//���������Ϣ�ṹ
+	Uint 	Type;					//异步机、同步机、其它机器
+	Uint 	Power;					//电机功率					单位0.1KW
+	Uint 	Votage;					//电机电压					单位1V
+	Uint 	CurrentGet;				//电机电流					单位0.1A
+	Uint 	Frequency;				//电机频率					单位0.01Hz
+	Uint 	FreqPer;				//标么值电机频率
+	Uint 	Current;				//电流基值					单位0.1A
+	Uint	CurBaseCoff;			//电流基值的放大倍数
+}MOTOR_STRUCT;//电机基本信息结构
 
 typedef struct MOTOR_EXTERN_STRUCT_DEF {
-	Uint 	R1;						//���������				��λ0.001ŷķ
-}MOTOR_EXTERN_STRUCT;//�����չ��Ϣ�ṹ
+	Uint 	R1;						//定子相电阻				单位0.001欧姆
+}MOTOR_EXTERN_STRUCT;//电机扩展信息结构
 
 struct ERROR_FLAG_SIGNAL {
-    Uint16  OvCurFlag:1;  //bit0=1��ʾ�����˹����ж�
-    Uint16  OvUdcFlag:1;  //bit1=1��ʾ�����˹�ѹ�ж�
+    Uint16  OvCurFlag:1;  //bit0=1表示发生了过流中断
+    Uint16  OvUdcFlag:1;  //bit1=1表示发生了过压中断
 	Uint16  Res:14;
 };
 union ERROR_FLAG_SIGNAL_DEF {
@@ -212,15 +212,15 @@ union ERROR_FLAG_SIGNAL_DEF {
    struct ERROR_FLAG_SIGNAL  bit;
 };
 typedef struct RUN_STATUS_STRUCT_DEF {
-	Uint 	RunStep;				//������
-	Uint 	SubStep;				//������
-	Uint 	VFStatus;				//VF״̬������bitλ����
-	Uint 	VCStatus;				//VC״̬������bitλ����
-	Uint 	ErrorCode;				//������־
-	Uint    LastErrorCode;          //�ϴι��ϴ��룬���������ѹ��λ�л�
+	Uint 	RunStep;				//主步骤
+	Uint 	SubStep;				//辅步骤
+	Uint 	VFStatus;				//VF状态，按照bit位定义
+	Uint 	VCStatus;				//VC状态，按照bit位定义
+	Uint 	ErrorCode;				//出错标志
+	Uint    LastErrorCode;          //上次故障代码，用于输出电压相位切换
 	union   ERROR_FLAG_SIGNAL_DEF	ErrFlag;									
     SEND_STATUS_UNION		StatusWord;	
-} RUN_STATUS_STRUCT;//��Ƶ������״̬�ṹ
+} RUN_STATUS_STRUCT;//变频器运行状态结构
 
 typedef struct UDC_LIMIT_IT_STRUCT_DEF {
     int    UDCLimit;
@@ -233,131 +233,131 @@ typedef struct UDC_LIMIT_IT_STRUCT_DEF {
 } UDC_LIMIT_IT_STRUCT;
 
 typedef struct BASE_COMMAND_STRUCT_DEF {
-	union MAIN_COMMAND_UNION_DEF Command;	//�������ֽṹ
-	int 	FreqSet;				//�����ٶ�
-	int 	FreqSetApply;			//ʵ���ٶȣ�ͬ���ٶȣ�
-	long 	FreqPreWs;				//ת���ǰ��ͬ���ٶ�
-	long 	FreqLast;				//0��ǰһ���ٶ�
-	long 	FreqFeed;				//����Ƶ��
-	long 	FreqDesired;			//Ŀ���ٶ�
-	long 	VCTorqueLim;			//VCת���޶�
-	long 	FreqReal;				//0.01Hz��ʾ��Ƶ��
-	Uint	SpeedFalg;				//�Ӽ��ٱ�־
-}BASE_COMMAND_STRUCT;//ʵʱ�޸ĵ�����ṹ
+	union MAIN_COMMAND_UNION_DEF Command;	//主命令字结构
+	int 	FreqSet;				//给定速度
+	int 	FreqSetApply;			//实际速度（同步速度）
+	long 	FreqPreWs;				//转差补偿前的同步速度
+	long 	FreqLast;				//0速前一拍速度
+	long 	FreqFeed;				//反馈频率
+	long 	FreqDesired;			//目标速度
+	long 	VCTorqueLim;			//VC转矩限定
+	long 	FreqReal;				//0.01Hz表示的频率
+	Uint	SpeedFalg;				//加减速标志
+}BASE_COMMAND_STRUCT;//实时修改的命令结构
 
 /************************************************************/
-/**********����Ϊ�͵����������趨�����������ݽṹ***********/
+/**********以下为和电机控制相关设定参数定义数据结构***********/
 typedef struct BASE_PAR_STRUCT_DEF {
-	long 	FullFreq;				//32767��ʾ��Ƶ��
-	Uint 	MaxFreq;				//���Ƶ��
-	Uint 	UpFreq;					//����Ƶ��
-	Uint 	LowFreq;				//����Ƶ��
-	Uint 	FcSet;					//�趨�ز�Ƶ��		
-	Uint 	FcSetApply;				//ʵ���ز�Ƶ��		
-}BASE_PAR_STRUCT;	//����������Ϣ�ṹ
+	long 	FullFreq;				//32767表示的频率
+	Uint 	MaxFreq;				//最大频率
+	Uint 	UpFreq;					//上限频率
+	Uint 	LowFreq;				//下限频率
+	Uint 	FcSet;					//设定载波频率		
+	Uint 	FcSetApply;				//实际载波频率		
+}BASE_PAR_STRUCT;	//基本运行信息结构
 
 typedef struct COM_PAR_INFO_STRUCT_DEF {
-	union SUB_COMMAND_UNION  SubCommand;	//�������ֽṹ
-}COM_PAR_INFO_STRUCT;	//�����з�ʽ�޹صĲ��������?
+	union SUB_COMMAND_UNION  SubCommand;	//辅命令字结构
+}COM_PAR_INFO_STRUCT;	//和运行方式无关的参数设置峁?
 
 typedef struct VF_INFO_STRUCT_DEF {
-	Uint 	VFLineType;				//VF����ѡ��
+	Uint 	VFLineType;				//VF曲线选择
 	Uint    ovGain;
-}VF_INFO_STRUCT;	//VF�����������ݽṹ
+}VF_INFO_STRUCT;	//VF参数设置数据结构
 
 /************************************************************/
-/********************����Ϊʵʱ��Ϣ���ݽṹ******************/
+/********************以下为实时信息数据结构******************/
 typedef struct UDC_STRUCT_DEF {
 	int		DetaUdc;
 	Uint	uDCBak;
-	Uint 	uDC;				//			��λ0.1V
-	Uint 	uDCFilter;			//���˲�ĸ�ߵ�ѹ	��λ0.1V
-	Uint 	uDCBigFilter;		//��ѹ��Ƿѹ�ж���ĸ�ߵ�ѹ	��λ0.1V
-	Uint 	Coff;				//ĸ�ߵ�ѹ����ϵ��
+	Uint 	uDC;				//			单位0.1V
+	Uint 	uDCFilter;			//大滤波母线电压	单位0.1V
+	Uint 	uDCBigFilter;		//过压、欠压判断用母线电压	单位0.1V
+	Uint 	Coff;				//母线电压计算系数
 	Uint 	Power;
-}UDC_STRUCT;	//ĸ�ߵ�ѹ����
+}UDC_STRUCT;	//母线电压数据
 
 typedef struct UVW_STRUCT_DEF{					
-	int  	U;					//Q12��ʽ���Ե���ֵΪ��ôֵ��ֵ
+	int  	U;					//Q12格式，以电机额定值为标么值基值
 	int  	V;
 	int  	W;
-}UVW_STRUCT;	//�����������������
+}UVW_STRUCT;	//定子三相坐标轴电流
 
 typedef struct IUVW_SAMPLING_STRUCT_DEF{					
-	int  	U;					//Q12��ʽ���Ե�������Ϊ��ôֵ��ֵ
+	int  	U;					//Q12格式，以电机额定电流为标么值基值
 	int  	V;
 	int  	W;
-	int		UErr;				//U��ë���˲�
-	int 	VErr;				//V��ë���˲�
-	long    Coff;				//��������ת��Ϊ��ôֵ������ϵ��
-}IUVW_SAMPLING_STRUCT;	//���������ṹ
+	int		UErr;				//U相毛刺滤波
+	int 	VErr;				//V相毛刺滤波
+	long    Coff;				//采样电流转换为标么值电流的系数
+}IUVW_SAMPLING_STRUCT;	//电流采样结构
 
 typedef struct ADC_STRUCT_DEF{					
-	Uint	DelaySet;			//ADC������ʱʱ��(0.1us��λ)
-	Uint  	ResetTime;			//ADC�Ѿ������Ĵ���
+	Uint	DelaySet;			//ADC采样延时时间(0.1us单位)
+	Uint  	ResetTime;			//ADC已经启动的次数
 	long	ZeroTotal;
 	int		ZeroCnt;
 	int		Comp;
-}ADC_STRUCT;	//�����������������
+}ADC_STRUCT;	//定子三相坐标轴电流
 
 typedef struct ALPHABETA_STRUCT_DEF{
 	int  	Alph;				//Q12
 	int  	Beta;
-}ALPHABETA_STRUCT;//���������������������ѹ�ṹ
+}ALPHABETA_STRUCT;//定子两相坐标轴电流、电压结构
 
 typedef struct MT_STRUCT_DEF{
 	int  	M;					//Q12
 	int  	T;
-}MT_STRUCT;	//MT��ϵ�µĵ�������ѹ�ṹ
+}MT_STRUCT;	//MT轴系下的电流、电压结构
 
 typedef struct AMPTHETA_STRUCT_DEF{
 	Uint  	Amp;				//Q12
 	int  	Theta;				//Q15
-	int     ThetaFilter;        //Q15 ������ѹ�нǵ��˲�ֵ
-}AMPTHETA_STRUCT;//�������ʾ�ĵ�������ѹ�ṹ
+	int     ThetaFilter;        //Q15 电流电压夹角的滤波值
+}AMPTHETA_STRUCT;//极坐标表示的电流、电压结构
 
 typedef struct LINE_CURRENT_STRUCT_DEF{
-	Uint  	CurPer;				//Q12 �Ե������Ϊ��ֵ��ʾ���ߵ�����Чֵ
-	Uint  	RealCurPer;			//Q12 �Ե������Ϊ��ֵ��ʾ��ߵ����Чֵ(��������)
-	Uint  	CurBaseInv;			//Q12 �Ա�Ƶ������Ϊ��ֵ��ʾ���ߵ�����Чֵ
-	Ulong  	CurBaseInvFilter;	//Q12 �Ա�Ƶ������Ϊ��ֵ��ʾ���ߵ�����Чֵ
-	Ulong  	CurPerFilter;		//Q12 �Ե������Ϊ��ֵ��ʾ���ߵ�����Чֵ
-	Uint  	CurPerShow;			//Q12 �Ե������Ϊ��ֵ��ʾ���ߵ�����Чֵ
-	Uint  	ErrorShow;			//����ʱ�̼�¼���ߵ�����Чֵ
-}LINE_CURRENT_STRUCT;//���������ʹ�õ��ߵ�����ʾ
+	Uint  	CurPer;				//Q12 以电机电流为基值表示的线电流有效值
+	Uint  	RealCurPer;			//Q12 以电机电流为基值表示南叩缌餍效值(考虑增益)
+	Uint  	CurBaseInv;			//Q12 以变频器电流为基值表示的线电流有效值
+	Ulong  	CurBaseInvFilter;	//Q12 以变频器电流为基值表示的线电流有效值
+	Ulong  	CurPerFilter;		//Q12 以电机电流为基值表示的线电流有效值
+	Uint  	CurPerShow;			//Q12 以电机电流为基值表示的线电流有效值
+	Uint  	ErrorShow;			//过流时刻记录的线电流有效值
+}LINE_CURRENT_STRUCT;//计算过程中使用的线电流表示
 
 typedef struct CBC_PROTECT_STRUCT_DEF{
    int      EnableFlag;
-   int      CntU;       //��������1.6����ֵ��������ۼ�
+   int      CntU;       //电流大于1.6倍峰值电流后的累加
    int      CntV;
    int      CntW;
-   Uint     CbcFlag;     //��ǰ2ms�ڷ�����������
-   Uint     CbcTimes;    //����������
-   Uint     CBCTimeSet;  //���������������趨ֵ
-   Uint     NoCbcTimes;  //������û�÷����ĳ���ʱ��
-}CBC_PROTECT_STRUCT;    //�������������ݽṹ
+   Uint     CbcFlag;     //当前2ms内发生了逐波限流
+   Uint     CbcTimes;    //逐波限流次数
+   Uint     CBCTimeSet;  //逐波限流动作次数设定值
+   Uint     NoCbcTimes;  //逐波限流没用发生的持续时间
+}CBC_PROTECT_STRUCT;    //逐波限流保护数据结构
 
 typedef struct ANGLE_STRUCT_DEF {
-	long 	StepPhase;			//�����Ƕȣ����������
-	long 	StepPhaseApply;		//�����Ƕȣ�ʵ��ʹ�ã�
-	long 	IMPhase; 			//M��Ƕ�
-	int 	OutPhase; 			//PWM�Ƕ�
-	int  	CompPhase;			//��λ�ӳٲ����Ƕ�
-	int  	RotorPhase;			//ת�ӽǶ�
+	long 	StepPhase;			//步长角度（计算出来）
+	long 	StepPhaseApply;		//步长角度（实际使用）
+	long 	IMPhase; 			//M轴角度
+	int 	OutPhase; 			//PWM角度
+	int  	CompPhase;			//相位延迟补偿角度
+	int  	RotorPhase;			//转子角度
 }ANGLE_STRUCT;
 
 /************************************************************/
-/*****************����Ϊ����ģ��ʹ�õ����ݽ�?***************/
+/*****************以下为独立模块使用的数据结?***************/
 typedef struct JUDGE_POWER_LOW_DEF {
 	Uint 	PowerUpFlag;
 	Uint 	WaiteTime;
 	Uint 	UDCOld;
-}JUDGE_POWER_LOW;	//�ϵ绺���ж�ʹ�����ݽṹ
+}JUDGE_POWER_LOW;	//上电缓冲判断使用数据结构
 
 typedef struct JUDGE_ACC_DEC_STRUCT_DEF {
 	int 	LastFreq;
 	int 	Cnt;
-}JUDGE_ACC_DEC_STRUCT;	//�жϼӼ��ٱ�־�����ݽṹ
+}JUDGE_ACC_DEC_STRUCT;	//判断加减速标志的数据结构
 
 typedef struct CUR_EXCURSION_STRUCT_DEF{
 	long	TotalIu;
@@ -369,15 +369,15 @@ typedef struct CUR_EXCURSION_STRUCT_DEF{
 	int		Iv;
 	int     Iw;
 	int     Ibus;
-	int		ErrUu;				//U����Ư��С
-    int     ErrIu;              //V����Ư��С
-	int		ErrIv;				//V����Ư��С
-	int     ErrIw;				//W����Ư��С
+	int		ErrUu;				//U相零漂大小
+    int     ErrIu;              //V相零漂大小
+	int		ErrIv;				//V相零漂大小
+	int     ErrIw;				//W相零漂大小
 	int     ErrIbus;
 	int  	Count;
 	int  	EnableCount;
 	int  	ErrCnt;
-}CUR_EXCURSION_STRUCT;//�����Ưʹ�õĽṹ
+}CUR_EXCURSION_STRUCT;//检测零漂使用的结构
 
 typedef struct UV_AMP_COFF_STRUCT_DEF {
 	Ulong	TotalU;
@@ -392,20 +392,20 @@ typedef struct UV_AMP_COFF_STRUCT_DEF {
 	Uint 	UDivVGet;
 	Uint 	UDivV;
 	Uint 	UDivVSave;
-}UV_AMP_COFF_STRUCT;//�����������������ƫ������ݽṹ
+}UV_AMP_COFF_STRUCT;//检测两相电流检测增益偏差的数据结构
 
 typedef struct TEMPLETURE_STRUCT_DEF{
-	Uint	TempAD;				//AD��ȡֵ�������¶Ȳ��
-	Uint	Temp;				//�öȱ�ʾ��ʵ���¶�ֵ
-	Uint	TempBak;			//�öȱ�ʾ��ʵ���¶�ֵ
+	Uint	TempAD;				//AD获取值，由于温度查表
+	Uint	Temp;				//用度表示的实际温度值
+	Uint	TempBak;			//用度表示的实际温度值
 	Uint	ErrCnt;
-}TEMPLETURE_STRUCT;//�ͱ�Ƶ���¶���ص����ݽṹ
+}TEMPLETURE_STRUCT;//和变频器温度相关的数据结构
 
 typedef struct FC_CAL_STRUCT_DEF{
 	Uint	Cnt;
 	Uint	Time;
 	Uint	FcBak;
-}FC_CAL_STRUCT;//�����ز�Ƶ�ʳ���ʹ�õ����ݽṹ
+}FC_CAL_STRUCT;//计算载波频率程序使用的数据结构
 
 typedef struct OVER_UDC_CTL_STRUCT_DEF{
 	int		CoffApply;
@@ -417,60 +417,60 @@ typedef struct OVER_UDC_CTL_STRUCT_DEF{
 	int		ExeCnt;
 	int		UdcBak;
 	int		Flag;
-	int		FreqMax;			//���ٵ�һ�ĵ�Ƶ��
-	int     AccTimes;           //��ѹ���Ƶ��µ�Ƶ�����Ӵ���
+	int		FreqMax;			//减速第一拍的频率
+	int     AccTimes;           //过压抑制导致的频率增加次数
 	int		OvUdcLimitTime;
-}OVER_UDC_CTL_STRUCT;//��������ģ��ʹ�õ����ݽṹ
+}OVER_UDC_CTL_STRUCT;//过流抑制模块使用的数据结构
 
 typedef struct DC_BRAKE_STRUCT_DEF{
-	int			Time;			//������
-	PID_STRUCT	PID;			//�ƶ���ѹ
-}DC_BRAKE_STRUCT;//ֱ���ƶ�ģ��ʹ�õ����ݽṹ
+	int			Time;			//计数用
+	PID_STRUCT	PID;			//制动电压
+}DC_BRAKE_STRUCT;//直流制动模块使用的数据结构
 
 typedef struct BRAKE_CONTROL_STRUCT_DEF{
-	Uint	Flag;				//��ǰ��ͨ/�ض�״̬
-}BRAKE_CONTROL_STRUCT;//�ƶ��������ģ��ʹ�õ����ݽṹ
+	Uint	Flag;				//当前开通/关断状态
+}BRAKE_CONTROL_STRUCT;//制动电阻控制模块使用的数据结构
 
 typedef enum ZERO_LENGTH_PHASE_SELECT_ENUM_DEF{
-    ZERO_VECTOR_U,        //DPWM����ʱ��U�෢ȫ����
-    ZERO_VECTOR_V,        //DPWM����ʱ��V�෢ȫ����
-    ZERO_VECTOR_W,        //DPWM����ʱ��W�෢ȫ����
-    ZERO_VECTOR_NONE=100  //û�з�ȫ��������
-}ZERO_LENGTH_PHASE_SELECT_ENUM;//PWM�����ָ����һ�෢����ȫ����
+    ZERO_VECTOR_U,        //DPWM调制时，U相发全脉宽
+    ZERO_VECTOR_V,        //DPWM调制时，V相发全脉宽
+    ZERO_VECTOR_W,        //DPWM调制时，W相发全脉宽
+    ZERO_VECTOR_NONE=100  //没有发全脉宽的相
+}ZERO_LENGTH_PHASE_SELECT_ENUM;//PWM输出，指明哪一相发的是全脉宽
 
 typedef struct OUT_VOLT_STRUCT_DEF {
-	int  	Volt;				//Q12�м������̵������ѹ����λ
+	int  	Volt;				//Q12中间计算过程的输出电压和相位
 	int   	VoltPhase;
 
-	int  	VoltApply;			//Q12�������ϵ��ʹ�õ������ѹ����λ
-	int     VoltDisplay;        //��ʾ�����ѹ����ֵΪ��Ƶ�����ѹ
+	int  	VoltApply;			//Q12计算调制系数使用的输出电压和相位
+	int     VoltDisplay;        //显示输出电压，基值为变频器额定电压
 	int   	VoltPhaseApply;
 }OUT_VOLT_STRUCT;
 
 typedef struct PWM_OUT_STRUCT_DEF {
 	long	U;
 	long	V;
-	long	W;				//�ýṹǰ��Ĳ�����Ҫ�ı�
+	long	W;				//该结构前面的参数不要改变
 
-	ZERO_LENGTH_PHASE_SELECT_ENUM    gZeroLengthPhase; //DPWM����ʱ��ָ����һ�෢����ȫ����
-	Uint	gPWMPrd;		//����õ��ز����ڣ�20nsΪ��λ��
-	Uint	gPWMPrdApply;	//�ж���ʵ��ʹ���ز�����
+	ZERO_LENGTH_PHASE_SELECT_ENUM    gZeroLengthPhase; //DPWM调制时，指明哪一相发的是全脉宽
+	Uint	gPWMPrd;		//计算得到载波周期（20ns为单位）
+	Uint	gPWMPrdApply;	//中断中实际使用载波周期
 
-	Uint	AsynModle;		//�첽����ģʽ/ͬ������ģʽѡ��
-	Uint	PWMModle;		//��������ģʽ/��ɢ����ģ�ѡ�?
+	Uint	AsynModle;		//异步调制模式/同步调制模式选择
+	Uint	PWMModle;		//连续调制模式/离散调制模窖≡?
 	int    	SoftPWMCoff;
-}PWM_OUT_STRUCT;	        //��ΪPWM����Ľṹ
+}PWM_OUT_STRUCT;	        //作为PWM输出的结构
 
 typedef struct DEAD_BAND_STRUCT_DEF{
-   int		DeadBand;			//����ʱ��(20ns��λ)
-   int		Comp;				//����ʱ��
-   Uint     CompMode;           // 0������ģʽ��ͨ��300һ�£�1��280��ǰ���õ�����������ʽ
+   int		DeadBand;			//死区时间(20ns单位)
+   int		Comp;				//补偿时间
+   Uint     CompMode;           // 0－补偿模式与通用300一致，1－280当前采用的死区补偿方式
    int     	CompU;
    int     	CompV;
    int     	CompW;
    int		MTPhase;
    Uint		InvCurFilter;
-}DEAD_BAND_STRUCT; 	//���������ṹ�嶨��
+}DEAD_BAND_STRUCT; 	//死区补偿结构体定义
 
 struct CBC_FLAG_STRUCT{
     Uint16  CBC_U:1;
@@ -485,7 +485,7 @@ typedef struct PHASE_LOSE_STRUCT_DEF{
    Ulong	TotalV;
    Ulong	TotalW;
    Uint		Cnt;
-}PHASE_LOSE_STRUCT; 	//���ȱ���жϳ���
+}PHASE_LOSE_STRUCT; 	//输出缺相判断程序
 
 typedef struct AI_STRUCT_DEF {
 	Uint 	gAI1;
@@ -501,7 +501,7 @@ typedef struct SHORT_GND_STRUCT_DEF {
 	Uint 	BaseUDC;
 	Uint	Flag;
 	int		ShortCur;
-}SHORT_GND_STRUCT;	//�ϵ�Եض�·������ݽṹ
+}SHORT_GND_STRUCT;	//上电对地短路检测数据结构
 
 typedef struct CPU_TIME_STRUCT_DEF {
 	Ulong 	Motor2MsBase;
@@ -509,10 +509,10 @@ typedef struct CPU_TIME_STRUCT_DEF {
 	Ulong	ADCIntBase;
 	Ulong	PWMIntBase;
 
-	Uint 	Motor2Ms;			//�������2msִ��ʱ��
-	Uint	Function2Ms;		//���ܲ���2����ִ��ʱ��
-	Uint	ADCInt;				//ADC�ж�ִ��ʱ��
-	Uint	PWMInt;				//PWM�ж�ִ��ʱ��
+	Uint 	Motor2Ms;			//电机控制2ms执行时间
+	Uint	Function2Ms;		//功能部分2摸索执行时间
+	Uint	ADCInt;				//ADC中断执行时间
+	Uint	PWMInt;				//PWM中断执行时间
 
 	Uint    System05OverRunCnt;
 	Uint    Fun2ms;
@@ -523,12 +523,12 @@ typedef struct CPU_TIME_STRUCT_DEF {
 
     Uint16    flash_IAP_flag;
     Uint16    IAP_Delay;
-}CPU_TIME_STRUCT;	//ͳ��ģ��ִ��ʱ������ݽṹ
+}CPU_TIME_STRUCT;	//统计模块执行时间的数据结构
 
 typedef struct FEISU_STRUCT_DEF{
 	Uint	VoltCNT;
 	int		SpeedLast;
-}FEISU_STRUCT;	//ת�ٸ���ʹ�ñ����Ľṹ����
+}FEISU_STRUCT;	//转速跟踪使用变量的结构定义
 
 typedef struct PM_INIT_POSITION_TYPE{
 	int SubStep;
@@ -633,52 +633,53 @@ typedef struct PG_STRUCT_DEF {
 
 
 /************************************************************
-�ṹ���� END
+结构定义 END
 ************************************************************/
 
 /************************************************************
-�������� BEGIN
+变量引用 BEGIN
 ************************************************************/
 /************************************************************/
-/*****************����Ϊ������������*************************/
+/*****************以下为基本变量定义*************************/
 extern PG_STRUCT                gPG;
 extern PM_INIT_POSITION         gIPMInitPos;
 extern PM_FLUX_WEAK				gFluxWeak;
-extern INV_STRUCT 				gInvInfo;		//��Ƶ����Ϣ
-extern MOTOR_STRUCT 			gMotorInfo;		//�����Ϣ
-extern MOTOR_EXTERN_STRUCT		gMotorExtReg;	//�����չ��Ϣ�����������ʶ�õ������ݣ�
-extern RUN_STATUS_STRUCT 		gMainStatus;	//������״̬
-extern BASE_COMMAND_STRUCT		gMainCmd;		//������
+extern INV_STRUCT 				gInvInfo;		//变频器信息
+extern MOTOR_STRUCT 			gMotorInfo;		//电机信息
+extern MOTOR_EXTERN_STRUCT		gMotorExtReg;	//电机扩展信息（电机参数辨识得到的数据）
+extern RUN_STATUS_STRUCT 		gMainStatus;	//主运行状态
+extern BASE_COMMAND_STRUCT		gMainCmd;		//主命令
 
 /************************************************************/
-/**********����Ϊ�͵����������趨��������******************/
-extern BASE_PAR_STRUCT			gBasePar;	//�������в���
-extern COM_PAR_INFO_STRUCT		gComPar;	//��������
-extern VF_INFO_STRUCT			gVFPar;		//VF����
+/**********以下为和电机控制相关设定参数定义******************/
+extern BASE_PAR_STRUCT			gBasePar;	//基本运行参数
+extern COM_PAR_INFO_STRUCT		gComPar;	//公共参数
+extern VF_INFO_STRUCT			gVFPar;		//VF参数
 
-extern ADC_STRUCT				gADC;		//ADC���ݲɼ��ṹ
-extern UDC_STRUCT				gUDC;		//ĸ�ߵ�ѹ����
+extern ADC_STRUCT				gADC;		//ADC数据采集结构
+extern UDC_STRUCT				gUDC;		//母线电压数据
 extern IUVW_SAMPLING_STRUCT		gCurSamp;
-extern UVW_STRUCT				gIUVW;		//�����������
-extern ALPHABETA_STRUCT			gIAlphBeta;	//���������������?
-extern MT_STRUCT				gIMT;		//MT��ϵ�µĵ���
-extern AMPTHETA_STRUCT			gIAmpTheta;	//�������ʾ�ĵ���
+extern UVW_STRUCT				gIUVW;		//定子三相电流
+extern ALPHABETA_STRUCT			gIAlphBeta;	//定子两相坐标轴电?
+extern MT_STRUCT				gIMT;		//MT轴系下的电流
+extern AMPTHETA_STRUCT			gIAmpTheta;	//极坐标表示的电流
 extern LINE_CURRENT_STRUCT		gLineCur;	
 
-extern ANGLE_STRUCT				gPhase;		//�ǶȽṹ
-extern JUDGE_POWER_LOW			gLowPower;	//�ϵ绺���ж�ʹ�����ݽṹ
-extern JUDGE_ACC_DEC_STRUCT		gSpeedFlag;	//�жϼӼ��ٱ�־�Ľṹ
-extern CUR_EXCURSION_STRUCT		gExcursionInfo;//�����Ưʹ�õĽṹ
+extern ANGLE_STRUCT				gPhase;		//角度结构
+extern JUDGE_POWER_LOW			gLowPower;	//上电缓冲判断使用数据结构
+extern JUDGE_ACC_DEC_STRUCT		gSpeedFlag;	//判断加减速标志的结构
+extern CUR_EXCURSION_STRUCT		gExcursionInfo;//检测零漂使用的结构
+extern int                      g_adc_offset_ready;  // ADC零偏采集完成标志
 extern DEAD_BAND_STRUCT			gDeadBand;
 extern OUT_VOLT_STRUCT			gOutVolt;
-extern Uint						gRatio;		//����ϵ��
+extern Uint						gRatio;		//调制系数
 extern PWM_OUT_STRUCT			gPWM;
-extern FC_CAL_STRUCT			gFcCal;		//�����ز�Ƶ��ʹ�õ����ݽṹ
+extern FC_CAL_STRUCT			gFcCal;		//计算载波频率使用的数据结构
 
 extern OVER_UDC_CTL_STRUCT		gOvUdc;
 
-extern DC_BRAKE_STRUCT			gDCBrake;	//ֱ���ƶ��ñ���
-extern BRAKE_CONTROL_STRUCT		gBrake;		//�ƶ���������ñ���
+extern DC_BRAKE_STRUCT			gDCBrake;	//直流制动用变量
+extern BRAKE_CONTROL_STRUCT		gBrake;		//制动电阻控制用变量
 extern TEMPLETURE_STRUCT		gTemperature;
 
 extern AI_STRUCT				gAI;
@@ -689,7 +690,7 @@ extern SHORT_GND_STRUCT			gShortGnd;
 extern CPU_TIME_STRUCT			gDSPActiveTime;
 
 extern UV_AMP_COFF_STRUCT		gUVCoff;
-extern FEISU_STRUCT				gFeisu;			//ת�ٸ����ñ���
+extern FEISU_STRUCT				gFeisu;			//转速跟踪用变量
 extern BEMF_STRUCT              gBemf;
 
 
@@ -801,9 +802,9 @@ END
 
 
 /************************************************************
-������ BEGIN
+函数引 BEGIN
 ************************************************************/
-//�������еĺ���˵��
+//主程序中的函数说明
 extern void CalOutVotInVFStatus(void);
 extern void CalOutVoltInDCBrakeStatus(void);
 extern void OutPutPWMVF(void);
@@ -850,7 +851,7 @@ extern int  GetPWMSector(void);
 extern void SynInitPosDetCal(void);
 extern void GetBemf_DirSpeed(void);
 
-//�Ӻ���˵��
+//子函数说明
 extern void UVWToAlphBetaAxes(UVW_STRUCT* , ALPHABETA_STRUCT* );
 extern void AlphBetaToDQ(ALPHABETA_STRUCT* , int , MT_STRUCT* );
 extern void DQToAmpTheta(MT_STRUCT* ,AMPTHETA_STRUCT* );
@@ -864,10 +865,11 @@ extern void MotorControlISR();
 extern void calc_pm_coef();
 extern void CalParToFunction(void);
 extern long GetCurrentIPD(int SectionData);
+extern int  check_adc_offset_threshold(void);
 
 void POE_Limit(long PowerValve,long PowerKp,long PowerKi);
 /************************************************************
-�������� END
+函数引用 END
 ************************************************************/
 
 
