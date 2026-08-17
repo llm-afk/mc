@@ -5,7 +5,7 @@
 #include "encoder.h"
 
 eeprom_t eeprom = {0};
-uint16_t eeprom_data_temp[ADDR_NUM] = {0}; // eeprom²ÁĞ´±¸·İ»º³åÇø
+uint16_t eeprom_data_temp[ADDR_NUM] = {0}; // eepromæ“¦å†™å¤‡ä»½ç¼“å†²åŒº
 
 eeprom_item_t eeprom_item_list[] = {
     {0, sizeof(ODObjs.node_id),                 &ODObjs.node_id},
@@ -28,14 +28,14 @@ eeprom_item_t eeprom_item_list[] = {
 };
 
 /**
- * @brief ÄÚ²¿Ê¹ÓÃÖ¸¶¨ÉÈÇø²Á³ıµÄº¯Êı
- * @param sectorMask Ö¸¶¨µÄ²Á³ıµÄÉÈÇøÑÚÂë£¬ÔÚFlash_ADP32F03x_API_Library.hÖĞÓĞ¶¨Òå
- * @return 0:²Á³ı³É¹¦ ÆäËûÖµ£ºÊ§°Ü
+ * @brief å†…éƒ¨ä½¿ç”¨æŒ‡å®šæ‰‡åŒºæ“¦é™¤çš„å‡½æ•°
+ * @param sectorMask æŒ‡å®šçš„æ“¦é™¤çš„æ‰‡åŒºæ©ç ï¼Œåœ¨Flash_ADP32F03x_API_Library.hä¸­æœ‰å®šä¹‰
+ * @return 0:æ“¦é™¤æˆåŠŸ å…¶ä»–å€¼ï¼šå¤±è´¥
  */
 #pragma CODE_SECTION(flash_erase_sector, "ramfuncs");
 uint16_t flash_erase_sector(uint16_t sectorMask)
 {
-    // ÏµÍ³ÔİÍ£
+    // ç³»ç»Ÿæš‚åœ
     DisableDog();
     DINT;
     DRTM;
@@ -43,7 +43,7 @@ uint16_t flash_erase_sector(uint16_t sectorMask)
     FLASH_ST FlashStatus;
     uint16_t status = Flash_Erase(sectorMask, &FlashStatus);
 
-    // ÏµÍ³»Ö¸´
+    // ç³»ç»Ÿæ¢å¤
     EINT;
     ERTM;
     KickDog();
@@ -53,16 +53,16 @@ uint16_t flash_erase_sector(uint16_t sectorMask)
 }
 
 /**
- * @brief ÄÚ²¿Ê¹ÓÃÖ¸¶¨µØÖ·Ğ´ÈëÊı¾İµÄº¯Êı
- * @param flashAddr FlashĞ´ÈëµÄÆğÊ¼µØÖ·
- * @param dataBuf ÒªĞ´ÈëµÄÊı¾İ»º³åÇøÖ¸Õë
- * @param length Ğ´Èë³¤¶È£¨ÒÔ16bitÎªµ¥Î»£©
- * @return 0:Ğ´Èë³É¹¦ ÆäËûÖµ£ºÊ§°Ü
+ * @brief å†…éƒ¨ä½¿ç”¨æŒ‡å®šåœ°å€å†™å…¥æ•°æ®çš„å‡½æ•°
+ * @param flashAddr Flashå†™å…¥çš„èµ·å§‹åœ°å€
+ * @param dataBuf è¦å†™å…¥çš„æ•°æ®ç¼“å†²åŒºæŒ‡é’ˆ
+ * @param length å†™å…¥é•¿åº¦ï¼ˆä»¥16bitä¸ºå•ä½ï¼‰
+ * @return 0:å†™å…¥æˆåŠŸ å…¶ä»–å€¼ï¼šå¤±è´¥
  */
 #pragma CODE_SECTION(flash_program, "ramfuncs");
 uint16_t flash_program(uint16_t *flashAddr, uint16_t *dataBuf, uint16_t length)
 {
-    //ÏµÍ³ÔİÍ£
+    //ç³»ç»Ÿæš‚åœ
     DisableDog();
     DINT;
     DRTM;
@@ -70,7 +70,7 @@ uint16_t flash_program(uint16_t *flashAddr, uint16_t *dataBuf, uint16_t length)
     FLASH_ST FlashStatus;
     uint16_t Status = Flash_Program(flashAddr, dataBuf, length, &FlashStatus);
 
-    // ÏµÍ³»Ö¸´
+    // ç³»ç»Ÿæ¢å¤
     EINT;
     ERTM;
     KickDog();
@@ -80,9 +80,9 @@ uint16_t flash_program(uint16_t *flashAddr, uint16_t *dataBuf, uint16_t length)
 }
 
 /**
- * @brief ¸ù¾İkey»ñÈ¡Ö¸¶¨²ÎÊıÔÚeeprom_data_tempµÄÊ×µØÖ·
- * @param key Ö¸¶¨²ÎÊıµÄkey
- * @return ·µ»ØÖ¸¶¨²ÎÊıeeprom_data_temp´æ´¢µÄÊ×µØÖ·
+ * @brief æ ¹æ®keyè·å–æŒ‡å®šå‚æ•°åœ¨eeprom_data_tempçš„é¦–åœ°å€
+ * @param key æŒ‡å®šå‚æ•°çš„key
+ * @return è¿”å›æŒ‡å®šå‚æ•°eeprom_data_tempå­˜å‚¨çš„é¦–åœ°å€
  */
 static inline uint16_t* get_temp_item_addr_from_key(uint16_t key)
 {
@@ -95,9 +95,9 @@ static inline uint16_t* get_temp_item_addr_from_key(uint16_t key)
 }
 
 /**
- * @brief ¸ù¾İkey»ñÈ¡Ö¸¶¨²ÎÊıÊµ¼ÊramÖĞµÄÊ×µØÖ·
- * @param key Ö¸¶¨²ÎÊıµÄkey
- * @return ·µ»ØÖ¸¶¨²ÎÊıÊµ¼ÊramÖĞµÄÊ×µØÖ·Ö¸Õë
+ * @brief æ ¹æ®keyè·å–æŒ‡å®šå‚æ•°å®é™…ramä¸­çš„é¦–åœ°å€
+ * @param key æŒ‡å®šå‚æ•°çš„key
+ * @return è¿”å›æŒ‡å®šå‚æ•°å®é™…ramä¸­çš„é¦–åœ°å€æŒ‡é’ˆ
  */
 static inline uint16_t* get_ram_item_addr_from_key(uint16_t key)
 {
@@ -105,9 +105,9 @@ static inline uint16_t* get_ram_item_addr_from_key(uint16_t key)
 }
 
 /**
- * @brief ¸ù¾İkey»ñÈ¡Ö¸¶¨²ÎÊıµÄ³¤¶È£¨Õ¼ÓÃµÄµØÖ·Êı£©
- * @param key Ö¸¶¨²ÎÊıµÄkey
- * @return ·µ»ØÖ¸¶¨²ÎÊıµÄ³¤¶È
+ * @brief æ ¹æ®keyè·å–æŒ‡å®šå‚æ•°çš„é•¿åº¦ï¼ˆå ç”¨çš„åœ°å€æ•°ï¼‰
+ * @param key æŒ‡å®šå‚æ•°çš„key
+ * @return è¿”å›æŒ‡å®šå‚æ•°çš„é•¿åº¦
  */
 static inline uint16_t get_item_len_from_key(uint16_t key)
 {
@@ -115,8 +115,8 @@ static inline uint16_t get_item_len_from_key(uint16_t key)
 }
 
 /**
- * @brief ¸ù¾İkey»ñÈ¡Êı¾İ´Ó eeprom ¼ÓÔØµ½ eeprom_data_temp ÖĞÖ¸¶¨²ÎÊıµÄflag
- * @param key Ö¸¶¨²ÎÊıµÄkey
+ * @brief æ ¹æ®keyè·å–æ•°æ®ä» eeprom åŠ è½½åˆ° eeprom_data_temp ä¸­æŒ‡å®šå‚æ•°çš„flag
+ * @param key æŒ‡å®šå‚æ•°çš„key
  * @return flag
  */
 static inline uint16_t get_temp_item_flag_from_key(uint16_t key)
@@ -125,9 +125,9 @@ static inline uint16_t get_temp_item_flag_from_key(uint16_t key)
 }
 
 /**
- * @brief ¼ÆËã temp ÖĞµÄÖ¸¶¨keyË÷ÒıµÄ²ÎÊıµÄchecksum
- * @param key Ö¸¶¨²ÎÊıµÄkey
- * @return ¼ÆËãµÄchecksum
+ * @brief è®¡ç®— temp ä¸­çš„æŒ‡å®škeyç´¢å¼•çš„å‚æ•°çš„checksum
+ * @param key æŒ‡å®šå‚æ•°çš„key
+ * @return è®¡ç®—çš„checksum
  */
 static inline uint16_t cal_temp_item_checksum_from_key(uint16_t key)
 {
@@ -141,9 +141,9 @@ static inline uint16_t cal_temp_item_checksum_from_key(uint16_t key)
 }
 
 /**
- * @brief »ñÈ¡ temp ÖĞµÄÖ¸¶¨keyË÷ÒıµÄ²ÎÊıµÄchecksum
- * @param key Ö¸¶¨²ÎÊıµÄkey
- * @return ·µ»ØµÄchecksum
+ * @brief è·å– temp ä¸­çš„æŒ‡å®škeyç´¢å¼•çš„å‚æ•°çš„checksum
+ * @param key æŒ‡å®šå‚æ•°çš„key
+ * @return è¿”å›çš„checksum
  */
 static inline uint16_t get_temp_item_checksum_from_key(uint16_t key)
 {
@@ -151,8 +151,8 @@ static inline uint16_t get_temp_item_checksum_from_key(uint16_t key)
 }
 
 /**
- * @brief Í¨¹ıkey½«Ö¸¶¨µÄ±äÁ¿´Ó ram ÖĞ¼ÓÔØµ½ eeprom_data_temp ÖĞ
- * @param key Ö¸¶¨²ÎÊıµÄkey
+ * @brief é€šè¿‡keyå°†æŒ‡å®šçš„å˜é‡ä» ram ä¸­åŠ è½½åˆ° eeprom_data_temp ä¸­
+ * @param key æŒ‡å®šå‚æ•°çš„key
  */
 static inline void load_ram_item_to_temp_from_key(uint16_t key)
 {
@@ -160,7 +160,7 @@ static inline void load_ram_item_to_temp_from_key(uint16_t key)
 }
 
 /**
- * @brief ½« eeprom ÖĞµÄËùÓĞ²ÎÊı¼ÓÔØµ½ eeprom_data_temp ÖĞ
+ * @brief å°† eeprom ä¸­çš„æ‰€æœ‰å‚æ•°åŠ è½½åˆ° eeprom_data_temp ä¸­
  */
 static inline void load_eeprom_item_to_temp(void)
 {
@@ -168,8 +168,8 @@ static inline void load_eeprom_item_to_temp(void)
 }
 
 /**
- * @brief Í¨¹ıkeyË÷Òı ram ÖĞµÄÄ³±äÁ¿¼ÆËãËüµÄ checksum È»ºó¼ÓÔØµ½ eeprom_data_temp ÖĞ
- * @param key Ö¸¶¨²ÎÊıµÄkey
+ * @brief é€šè¿‡keyç´¢å¼• ram ä¸­çš„æŸå˜é‡è®¡ç®—å®ƒçš„ checksum ç„¶ååŠ è½½åˆ° eeprom_data_temp ä¸­
+ * @param key æŒ‡å®šå‚æ•°çš„key
  */
 static inline void load_ram_checksum_to_temp_from_key(uint16_t key)
 {
@@ -185,17 +185,17 @@ static inline void load_ram_checksum_to_temp_from_key(uint16_t key)
 }
 
 /**
- * @brief Í¨¹ıkeyË÷Òı temp ÖĞµÄÄ³±äÁ¿²¢ÖÃÎ»ËüµÄ flag
- * @param key Ö¸¶¨²ÎÊıµÄkey
+ * @brief é€šè¿‡keyç´¢å¼• temp ä¸­çš„æŸå˜é‡å¹¶ç½®ä½å®ƒçš„ flag
+ * @param key æŒ‡å®šå‚æ•°çš„key
  */
 static inline void set_temp_flag_from_key(uint16_t key)
 {
-    *(uint16_t *)(get_temp_item_addr_from_key(key) + get_item_len_from_key(key) + 1) = 1; // ÖÃÎªtempÖĞµÄÖ¸¶¨itemµÄflag
+    *(uint16_t *)(get_temp_item_addr_from_key(key) + get_item_len_from_key(key) + 1) = 1; // ç½®ä¸ºtempä¸­çš„æŒ‡å®šitemçš„flag
 }
 
 /**
- * @brief Í¨¹ıkey½«Ö¸¶¨µÄ±äÁ¿´Ó eeprom_data_temp ÖĞ¼ÓÔØµ½ ram ÖĞ
- * @param key Ö¸¶¨²ÎÊıµÄkey
+ * @brief é€šè¿‡keyå°†æŒ‡å®šçš„å˜é‡ä» eeprom_data_temp ä¸­åŠ è½½åˆ° ram ä¸­
+ * @param key æŒ‡å®šå‚æ•°çš„key
  */
 static inline void load_temp_item_to_ram_from_key(uint16_t key)
 {
@@ -203,89 +203,123 @@ static inline void load_temp_item_to_ram_from_key(uint16_t key)
 }
 
 /**
- * @brief ³õÊ¼»¯flash_eepromÄ£¿é
+ * @brief åˆå§‹åŒ–flash_eepromæ¨¡å—
  */
 void eeprom_init(void)
 {
     memset(&eeprom, 0, sizeof(eeprom));
-    eeprom.item_num = sizeof(eeprom_item_list)/sizeof(eeprom_item_t); // »ñÈ¡²ÎÊı±í²ÎÊıÊıÁ¿
+    eeprom.item_num = sizeof(eeprom_item_list)/sizeof(eeprom_item_t); // è·å–å‚æ•°è¡¨å‚æ•°æ•°é‡
 }
 
 /**
- * @brief Í¨¹ıkey½«Ö¸¶¨µÄ±äÁ¿Öµ±£´æµ½eepromÖĞ
- * @param key ²ÎÊıµÄ±êÊ¶ID
- * @return ´íÎóÂë 0£ºÎŞ´íÎó
+ * @brief é€šè¿‡keyå°†æŒ‡å®šçš„å˜é‡å€¼ä¿å­˜åˆ°eepromä¸­
+ * @param key å‚æ•°çš„æ ‡è¯†ID
+ * @return é”™è¯¯ç  0ï¼šæ— é”™è¯¯
  */
 #pragma CODE_SECTION(load_ram_item_to_eeprom_from_key, "ramfuncs");
 uint16_t load_ram_item_to_eeprom_from_key(uint16_t key)
 {  
-    uint16_t error_mask = 0; // ´íÎóÑÚÂë
+    uint16_t error_mask = 0; // é”™è¯¯æ©ç 
     
-    load_eeprom_item_to_temp(); // Ê×ÏÈÊÇ½«eepromµÄÊı¾İ»Ø¶Áµ½eeprom²ÁĞ´±¸·İ»º³åÇø
+    load_eeprom_item_to_temp(); // é¦–å…ˆæ˜¯å°†eepromçš„æ•°æ®å›è¯»åˆ°eepromæ“¦å†™å¤‡ä»½ç¼“å†²åŒº
 
-    if(flash_erase_sector(SECTORE) != 0) // È»ºó²Á³ı¸ÃÉÈÇø,ÊÂÏÈ·ÖÅäµÄÊÇSECTORE
+    if(flash_erase_sector(SECTORE) != 0) // ç„¶åæ“¦é™¤è¯¥æ‰‡åŒº,äº‹å…ˆåˆ†é…çš„æ˜¯SECTORE
     {
-        error_mask |= ERROR_MASK_ERASE_FAIL; // ÉÈÇø²Á³ıÊ§°Ü
+        error_mask |= ERROR_MASK_ERASE_FAIL; // æ‰‡åŒºæ“¦é™¤å¤±è´¥
     }
 
-    load_ram_item_to_temp_from_key(key); // ¼ÓÔØÊı¾İµ½temp
-    load_ram_checksum_to_temp_from_key(key); // ¼ÓÔØÊı¾İµÄchecksumµ½tempÖĞ
-    set_temp_flag_from_key(key); // ÖÃÎ»tempÖĞ¸ÃitemµÄflag
+    load_ram_item_to_temp_from_key(key); // åŠ è½½æ•°æ®åˆ°temp
+    load_ram_checksum_to_temp_from_key(key); // åŠ è½½æ•°æ®çš„checksumåˆ°tempä¸­
+    set_temp_flag_from_key(key); // ç½®ä½tempä¸­è¯¥itemçš„flag
 
-    // È»ºó°Ñ eeprom_data_temp Ğ´»ØÕâ¸öÉÈÇø
+    // ç„¶åæŠŠ eeprom_data_temp å†™å›è¿™ä¸ªæ‰‡åŒº
     if(flash_program((uint16_t *)START_ADDR, eeprom_data_temp, ADDR_NUM) != 0) 
     {
-        error_mask |= ERROR_MASK_WRITE_FAIL; // ÉÈÇøĞ´ÈëÊ§°Ü
+        error_mask |= ERROR_MASK_WRITE_FAIL; // æ‰‡åŒºå†™å…¥å¤±è´¥
     }
     
     return error_mask;
 }
 
 /**
- * @brief ½« eeprom ÖĞµÄËùÓĞ²ÎÊı¼ÓÔØ¸üĞÂµ½ ram ÖĞµÄ±äÁ¿ÖĞ
- * @return ´íÎóÂë 0£ºÎŞ´íÎó
+ * @brief ä¸€æ¬¡æ€§åŒæ—¶ä¿å­˜ä¸»ç¼–ç å™¨(key 2)å’Œå‰¯ç¼–ç å™¨(key 3)çš„é›¶åï¼Œé¿å…åŒé‡æ“¦å†™
+ * @return é”™è¯¯æ©ç  0:æ— é”™è¯¯
+ */
+#pragma CODE_SECTION(load_encoder_offsets_to_eeprom, "ramfuncs");
+uint16_t load_encoder_offsets_to_eeprom(void)
+{  
+    uint16_t error_mask = 0;
+    
+    load_eeprom_item_to_temp(); 
+
+    // åŒæ—¶å°† Key 2 å’Œ Key 3 å†™å…¥ temp ç¼“å­˜
+    load_ram_item_to_temp_from_key(2);
+    load_ram_checksum_to_temp_from_key(2);
+    set_temp_flag_from_key(2);
+
+    load_ram_item_to_temp_from_key(3);
+    load_ram_checksum_to_temp_from_key(3);
+    set_temp_flag_from_key(3);
+
+    // å•æ¬¡æ“¦é™¤ï¼Œå•æ¬¡ç¼–ç¨‹
+    if(flash_erase_sector(SECTORE) != 0) 
+    {
+        error_mask |= ERROR_MASK_ERASE_FAIL;
+    }
+
+    if(flash_program((uint16_t *)START_ADDR, eeprom_data_temp, ADDR_NUM) != 0) 
+    {
+        error_mask |= ERROR_MASK_WRITE_FAIL;
+    }
+    
+    return error_mask;
+}
+
+/**
+ * @brief å°† eeprom ä¸­çš„æ‰€æœ‰å‚æ•°åŠ è½½æ›´æ–°åˆ° ram ä¸­çš„å˜é‡ä¸­
+ * @return é”™è¯¯ç  0ï¼šæ— é”™è¯¯
  */
 uint16_t load_eeprom_to_ram(void)
 {
     uint16_t flag = 0;
-    uint16_t error_mask = 0; // ´íÎóÑÚÂë
-    load_eeprom_item_to_temp(); // ÏÈ½«eepromÖĞµÄ²ÎÊıÊı¾İ¶¼¼ÓÔØµ½ eeprom_data_temp ÖĞ
+    uint16_t error_mask = 0; // é”™è¯¯æ©ç 
+    load_eeprom_item_to_temp(); // å…ˆå°†eepromä¸­çš„å‚æ•°æ•°æ®éƒ½åŠ è½½åˆ° eeprom_data_temp ä¸­
 
-    for(uint16_t i=0; i<eeprom.item_num; i++) // Öğ¸ö·ÖÎötempÖĞµÄitem
+    for(uint16_t i=0; i<eeprom.item_num; i++) // é€ä¸ªåˆ†ætempä¸­çš„item
     {
-        if(get_temp_item_flag_from_key(i) == 0xFFFF) // ±íÊ¾eepromÖĞµÄÕâ¸öitem»¹Ã»ÓĞ±»Ğ´Èë¹ı£¬½«×¢²áµÄitemµÄÄ¬ÈÏÖµ×÷ÎªµÚÒ»´ÎµÄ¼ÓÔØÖµ
+        if(get_temp_item_flag_from_key(i) == 0xFFFF) // è¡¨ç¤ºeepromä¸­çš„è¿™ä¸ªitemè¿˜æ²¡æœ‰è¢«å†™å…¥è¿‡ï¼Œå°†æ³¨å†Œçš„itemçš„é»˜è®¤å€¼ä½œä¸ºç¬¬ä¸€æ¬¡çš„åŠ è½½å€¼
         {
-            load_ram_item_to_temp_from_key(i); // ¼ÓÔØÊı¾İµ½temp
-            load_ram_checksum_to_temp_from_key(i); // ¼ÓÔØÊı¾İµÄchecksumµ½tempÖĞ
-            set_temp_flag_from_key(i); // ÖÃÎ»tempÖĞ¸ÃitemµÄflag
-            flag = 1; // ĞèÒª¸üĞÂeeprom
+            load_ram_item_to_temp_from_key(i); // åŠ è½½æ•°æ®åˆ°temp
+            load_ram_checksum_to_temp_from_key(i); // åŠ è½½æ•°æ®çš„checksumåˆ°tempä¸­
+            set_temp_flag_from_key(i); // ç½®ä½tempä¸­è¯¥itemçš„flag
+            flag = 1; // éœ€è¦æ›´æ–°eeprom
         }
-        else // Ê¹ÓÃeepromÖĞµÄÖµ
+        else // ä½¿ç”¨eepromä¸­çš„å€¼
         {
-            if(get_temp_item_checksum_from_key(i) == cal_temp_item_checksum_from_key(i)) // tempÖĞµÄÊı¾İĞ£ÑéÍ¨¹ıÁË
+            if(get_temp_item_checksum_from_key(i) == cal_temp_item_checksum_from_key(i)) // tempä¸­çš„æ•°æ®æ ¡éªŒé€šè¿‡äº†
             {
-                load_temp_item_to_ram_from_key(i); // ¼ÓÔØµ½ramÖĞ
+                load_temp_item_to_ram_from_key(i); // åŠ è½½åˆ°ramä¸­
             }
-            else // Ğ£ÑéÊ§°Ü£¬Êı¾İËğ»µ£¬ÓÃRAMÄ¬ÈÏÖµĞŞ¸´eepromÖĞµÄitem
+            else // æ ¡éªŒå¤±è´¥ï¼Œæ•°æ®æŸåï¼Œç”¨RAMé»˜è®¤å€¼ä¿®å¤eepromä¸­çš„item
             {
-                load_ram_item_to_temp_from_key(i); // ÓÃRAMÄ¬ÈÏÖµ¸üĞÂtemp
-                load_ram_checksum_to_temp_from_key(i); // ¼ÓÔØÊı¾İµÄchecksumµ½tempÖĞ
-                set_temp_flag_from_key(i); // ÖÃÎ»tempÖĞ¸ÃitemµÄflag
-                flag = 1; // ĞèÒª¸üĞÂeeprom
-                error_mask |= ERROR_MASK_ER_DATA_ERROR; // eepromÓĞÊı¾İËğ»µ£¬¼ÓÔØramÄ¬ÈÏÖµ
+                load_ram_item_to_temp_from_key(i); // ç”¨RAMé»˜è®¤å€¼æ›´æ–°temp
+                load_ram_checksum_to_temp_from_key(i); // åŠ è½½æ•°æ®çš„checksumåˆ°tempä¸­
+                set_temp_flag_from_key(i); // ç½®ä½tempä¸­è¯¥itemçš„flag
+                flag = 1; // éœ€è¦æ›´æ–°eeprom
+                error_mask |= ERROR_MASK_ER_DATA_ERROR; // eepromæœ‰æ•°æ®æŸåï¼ŒåŠ è½½ramé»˜è®¤å€¼
             }
         }
     }
 
-    if(flag == 1) // ±íÊ¾ eeprom ÖĞµÄÊı¾İĞèÒª¸üĞÂ
+    if(flag == 1) // è¡¨ç¤º eeprom ä¸­çš„æ•°æ®éœ€è¦æ›´æ–°
     {
-        if(flash_erase_sector(SECTORE) != 0) // ²Á³ı¸ÃÉÈÇø,ÊÂÏÈ·ÖÅäµÄÊÇ SECTORE
+        if(flash_erase_sector(SECTORE) != 0) // æ“¦é™¤è¯¥æ‰‡åŒº,äº‹å…ˆåˆ†é…çš„æ˜¯ SECTORE
         {
-            error_mask |= ERROR_MASK_ERASE_FAIL; // ÉÈÇø²Á³ıÊ§°Ü
+            error_mask |= ERROR_MASK_ERASE_FAIL; // æ‰‡åŒºæ“¦é™¤å¤±è´¥
         }
-        if(flash_program((uint16_t *)START_ADDR, eeprom_data_temp, ADDR_NUM) != 0) // È»ºó°Ñ eeprom_data_temp Ğ´»ØÕâ¸öÉÈÇø
+        if(flash_program((uint16_t *)START_ADDR, eeprom_data_temp, ADDR_NUM) != 0) // ç„¶åæŠŠ eeprom_data_temp å†™å›è¿™ä¸ªæ‰‡åŒº
         {
-            error_mask |= ERROR_MASK_WRITE_FAIL; // ÉÈÇøĞ´ÈëÊ§°Ü
+            error_mask |= ERROR_MASK_WRITE_FAIL; // æ‰‡åŒºå†™å…¥å¤±è´¥
         }
     }
 

@@ -1,4 +1,5 @@
 #include "od.h"
+#include "encoder.h"
 
 ODObjs_t ODObjs;
 static uint16_t ODObjsCount = 0;
@@ -47,7 +48,7 @@ static const OD_entry_t ODList[] =
     {0x2060, &ODObjs.over_temp_drv_level,       4, ATTR_ROM | ATTR_RW, NULL},
     {0x2061, &ODObjs.over_temp_motor_level,     4, ATTR_ROM | ATTR_RW, NULL},
 
-    {0x2070, &ODObjs.in_encoder_offset,         2, ATTR_ROM | ATTR_RW, enc_set_zero}, // ±êÁãÖ»ÐèÒªÐ´ÈëÒ»´Î0x2070¼´¿É
+    {0x2070, &ODObjs.in_encoder_offset,         2, ATTR_RAM | ATTR_RW, enc_set_zero}, // æ ‡é›¶åªéœ€è¦å†™å…¥ä¸€æ¬¡0x2070å³å¯
     {0x2071, &ODObjs.ex_encoder_offset,         2, ATTR_ROM | ATTR_RW, NULL}, 
     {0x2072, &ODObjs.is_calibrated,             2, ATTR_ROM | ATTR_RW, NULL},
     {0x2100, &ODObjs.firmware_version,          2, ATTR_RAM | ATTR_R,  NULL},
@@ -69,8 +70,8 @@ static void dictionary_init(void)
     ODObjs.node_id = 1;
     ODObjs.is_calibrated = 0;
 
-    ODObjs.heartbeat_Producer_enable = 0; // Ä¬ÈÏ¹Ø±ÕÐÄÌøÉÏ±¨¹¦ÄÜ
-    ODObjs.heartbeat_consumer_enable = 1; // Ä¬ÈÏ¿ªÆôÐÄÌø¼à²â¹¦ÄÜ
+    ODObjs.heartbeat_Producer_enable = 0; // é»˜è®¤å…³é—­å¿ƒè·³ä¸ŠæŠ¥åŠŸèƒ½
+    ODObjs.heartbeat_consumer_enable = 1; // é»˜è®¤å¼€å¯å¿ƒè·³ç›‘æµ‹åŠŸèƒ½
 
     ODObjs.torque_limit = 30.0f;
     ODObjs.over_temp_drv_level = 85.0f;
@@ -82,10 +83,10 @@ static void dictionary_init(void)
 }
 
 /**
- * @brief ¼æÈÝÎÒÐ´µÄeeprom¿âµÄÒ»¸ö²¹¶¡°ÉËãÊÇ
- * @param idx od objË÷Òý
- * @return eeprom¿âkeyË÷Òý
- * @note ËùÓÐ×¢²áÔÚod×Öµä¶ÔÏóÖÐµÄÓÐromÊôÐÔµÄ±äÁ¿¶¼ÐèÒªÔÚÕâÀï¶à×¢²áÒ»±é
+ * @brief å…¼å®¹æˆ‘å†™çš„eepromåº“çš„ä¸€ä¸ªè¡¥ä¸å§ç®—æ˜¯
+ * @param idx od objç´¢å¼•
+ * @return eepromåº“keyç´¢å¼•
+ * @note æ‰€æœ‰æ³¨å†Œåœ¨odå­—å…¸å¯¹è±¡ä¸­çš„æœ‰romå±žæ€§çš„å˜é‡éƒ½éœ€è¦åœ¨è¿™é‡Œå¤šæ³¨å†Œä¸€é
  */
 static uint16_t get_eeprom_key_from_index(uint16_t idx)
 {
@@ -106,7 +107,7 @@ static uint16_t get_eeprom_key_from_index(uint16_t idx)
         case 0x2008: return 14;  // sn_s4
         case 0x2009: return 15;  // sn_s5
         case 0x200A: return 16;  // sn_s6
-        default: return 0xFF;    // ÎÞÐ§Ë÷Òý£¬·µ»Ø´íÎó±êÊ¶
+        default: return 0xFF;    // æ— æ•ˆç´¢å¼•ï¼Œè¿”å›žé”™è¯¯æ ‡è¯†
     }
 }
 
@@ -155,7 +156,7 @@ void OD_init(void)
 
 void OD_check_sn(void)
 {
-    // Ã»ÓÐsnÂë£¬±¨´í
+    // æ²¡æœ‰snç ï¼ŒæŠ¥é”™
     if(ODObjs.sn_s0 == 0 && ODObjs.sn_s1 == 0 && ODObjs.sn_s2 == 0 && 
        ODObjs.sn_s3 == 0 && ODObjs.sn_s4 == 0 && ODObjs.sn_s5 == 0 && ODObjs.sn_s6 == 0)
     {
@@ -163,24 +164,24 @@ void OD_check_sn(void)
         return;
     }
 
-    // ½âÎöÓ²¼þ°æ±¾¶Î (sn_s3)
-    // ¸ù¾Ý¹æÔò£¬sn_s3ÊÇ4¸öASCII×Ö·û(ABCD)£¬ÔÚÐ¡¶ËÄ£Ê½ÏÂ£º
-    // [7:0]   AÎ» (½á¹¹±ä¶¯)
-    // [15:8]  BÎ» (Ð¾Æ¬Æ½Ì¨)
-    // [23:16] CÎ» (µç»úÐÍºÅ)
-    // [31:24] DÎ» (Ó²¼þ°æ±¾)
+    // è§£æžç¡¬ä»¶ç‰ˆæœ¬æ®µ (sn_s3)
+    // æ ¹æ®è§„åˆ™ï¼Œsn_s3æ˜¯4ä¸ªASCIIå­—ç¬¦(ABCD)ï¼Œåœ¨å°ç«¯æ¨¡å¼ä¸‹ï¼š
+    // [7:0]   Aä½ (ç»“æž„å˜åŠ¨)
+    // [15:8]  Bä½ (èŠ¯ç‰‡å¹³å°)
+    // [23:16] Cä½ (ç”µæœºåž‹å·)
+    // [31:24] Dä½ (ç¡¬ä»¶ç‰ˆæœ¬)
     uint16_t b_bit_platform = (ODObjs.sn_s3 >> 8) & 0xFF;
     uint16_t c_bit_motor    = (ODObjs.sn_s3 >> 16) & 0xFF;
     uint16_t d_bit_version  = (ODObjs.sn_s3 >> 24) & 0xFF;
 
-    // ÒªÇóÊÊÅä£ºB=2 (ADMÆ½Ì¨), C=2 (C2_xinzhi)
+    // è¦æ±‚é€‚é…ï¼šB=2 (ADMå¹³å°), C=2 (C2_xinzhi)
     if(b_bit_platform == '2' && c_bit_motor == '2')
     {
-        ODObjs.error_code &= ~ERR_NO_SN; // Ð£ÑéÍ¨¹ý£¬·ÅÐÐ
+        ODObjs.error_code &= ~ERR_NO_SN; // æ ¡éªŒé€šè¿‡ï¼Œæ”¾è¡Œ
     }
     else
     {
-        ODObjs.error_code |= ERR_NO_SN;  // ²»Æ¥Åä±¾Çý¶¯Æ÷£¬Ëø¶¨
+        ODObjs.error_code |= ERR_NO_SN;  // ä¸åŒ¹é…æœ¬é©±åŠ¨å™¨ï¼Œé”å®š
     }
 }
 
@@ -268,6 +269,17 @@ uint16_t OD_write_2(uint16_t idx, uint16_t *data)
 {
     uint16_t cs = CS_ERR;
     OD_entry_t *entry = find_entry(idx);
+    
+    // æ ‡é›¶å®‰å…¨æ£€æŸ¥ï¼šç”µæœºæ—‹è½¬æœ‰é€Ÿåº¦æ—¶æ‹’ç»æ ‡é›¶ï¼Œé˜²æ­¢å…³ä¸­æ–­æ“¦å†™ Flash å¯¼è‡´ FOC å¤±æŽ§å’Œç”µæºå¼‚å¸¸
+    if(idx == 0x2070)
+    {
+        int32_t vel = encoder.enc_velocity_q14;
+        if(vel > ZERO_CALIB_MAX_VEL_Q14 || vel < -ZERO_CALIB_MAX_VEL_Q14)
+        {
+            memset(data, 0, 2);
+            return CS_ERR;
+        }
+    }
     
     if((entry != NULL) && (entry->attribute & ATTR_W) && (entry->datasize == 2))
     {

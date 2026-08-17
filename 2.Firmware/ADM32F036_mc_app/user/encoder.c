@@ -11,11 +11,11 @@ encoder_config_t encoder_config = {
 encoder_t encoder = {0};
 
 /**
- * @brief ³õÊ¼»¯
+ * @brief åˆå§‹åŒ–
  */
 void encoder_init(void)
 {
-    // »ñÈ¡eepromÖĞ±êÖ¾Î»Æ«ÒÆ
+    // è·å–eepromä¸­æ ‡å¿—ä½åç§»
     encoder.in_enc_deg_zero_conf = ODObjs.in_encoder_offset; 
     encoder.ex_enc_deg_zero_conf = ODObjs.ex_encoder_offset;
     encoder.enc_error_conf = encoder.in_enc_deg_zero_conf - encoder.ex_enc_deg_zero_conf;
@@ -28,18 +28,48 @@ void encoder_init(void)
         encoder.enc_error_conf += ENCODER_CPR; 
     }
 
-    // ¶ÁÈ¡½Ç¶È
-    uint16_t enc_temp = get_pri_enc_val(); 
-    uint16_t ex_enc_temp = get_sec_enc_val();
+    // å»¶æ—¶ç­‰å¾…ç¼–ç å™¨é€šä¿¡ç¨³å®šï¼Œå¹¶å†²åˆ·åˆå§‹å¸§
+    extern void ADP32F03x_usDelay(Uint32 Count);
+    ADP32F03x_usDelay(3000L); // å»¶æ—¶ 3ms ç­‰å¾… MA900 å†…éƒ¨å»ºç«‹
+    for(uint16_t i = 0; i < 4; i++)
+    {
+        get_pri_enc_val();
+        get_sec_enc_val();
+        ADP32F03x_usDelay(50L);
+    }
 
-    // ·­×ª´¦Àí
+    // ç¯å½¢ç›¸ä½è§£å·ç»•å‡å€¼é‡‡æ ·ï¼ˆå½»åº•æœç» 0/16383 è·¨é›¶è¾¹ç•Œç®—æœ¯æ±‚å’Œé™·é˜±ï¼‰
+    uint16_t p0 = get_pri_enc_val();
+    uint16_t s0 = get_sec_enc_val();
+    int32_t pri_delta_sum = 0, sec_delta_sum = 0;
+
+    for(uint16_t i = 0; i < 8; i++)
+    {
+        int16_t dp = (int16_t)(get_pri_enc_val() - p0);
+        int16_t ds = (int16_t)(get_sec_enc_val() - s0);
+
+        if(dp > ENCODER_CPR_DIV) dp -= ENCODER_CPR;
+        else if(dp < -ENCODER_CPR_DIV) dp += ENCODER_CPR;
+
+        if(ds > ENCODER_CPR_DIV) ds -= ENCODER_CPR;
+        else if(ds < -ENCODER_CPR_DIV) ds += ENCODER_CPR;
+
+        pri_delta_sum += dp;
+        sec_delta_sum += ds;
+        ADP32F03x_usDelay(50L);
+    }
+
+    uint16_t enc_temp    = (uint16_t)((int32_t)p0 + (pri_delta_sum >> 3)) & (ENCODER_CPR - 1);
+    uint16_t ex_enc_temp = (uint16_t)((int32_t)s0 + (sec_delta_sum >> 3)) & (ENCODER_CPR - 1);
+
+    // ç¿»è½¬å¤„ç†
     if(!encoder_config.encoder_reverse)
     {
         enc_temp = 16383 - enc_temp;
         ex_enc_temp = 16383 - ex_enc_temp;
     }
 
-    // ÉÏµçÊ±¿ÌÆ«ÒÆÁ¿
+    // ä¸Šç”µæ—¶åˆ»åç§»é‡
     encoder.in_enc_deg_zero = enc_temp;
     encoder.ex_enc_deg_zero = ex_enc_temp;
     encoder.enc_error = encoder.in_enc_deg_zero - encoder.ex_enc_deg_zero;
@@ -52,7 +82,7 @@ void encoder_init(void)
         encoder.enc_error += ENCODER_CPR; 
     }
 
-    // ¼ÆËãÉÏµçÊ±¿ÌË«±àÂëÆ÷Îó²î
+    // è®¡ç®—ä¸Šç”µæ—¶åˆ»åŒç¼–ç å™¨è¯¯å·®
     encoder.error = encoder.enc_error + encoder.enc_error_conf;
     if(encoder.error > ENCODER_CPR_DIV) 
     {
@@ -65,8 +95,8 @@ void encoder_init(void)
 }
 
 /**
- * @brief ±àÂëÆ÷Ñ­»·
- * @note ÔÚµç½Ç¶ÈµÄ 20kHz ÖĞ¶ÏÖĞÖ´ĞĞ
+ * @brief ç¼–ç å™¨å¾ªç¯
+ * @note åœ¨ç”µè§’åº¦çš„ 20kHz ä¸­æ–­ä¸­æ‰§è¡Œ
  */
 #pragma CODE_SECTION(encoder_loop,"ramfuncs");
 void encoder_loop(void)
@@ -96,7 +126,7 @@ void encoder_loop(void)
     ODObjs.in_encoder_offset        = raw_deg_rev;
     ODObjs.ex_encoder_offset        = ex_raw;
 
-    // ÏßĞÔ»¯²¹³¥
+    // çº¿æ€§åŒ–è¡¥å¿
     uint16_t lined_deg;
     {
         uint16_t idx1 = raw_deg_rev >> 5; 
@@ -111,7 +141,7 @@ void encoder_loop(void)
         encoder.enc_degree_lined = lined_deg;
     }
 
-    // Î¬»¤¶àÈ¦ÀÛ»ıÖµ
+    // ç»´æŠ¤å¤šåœˆç´¯ç§¯å€¼
     static uint16_t degree_last = 0;
     static uint16_t flag = 0; 
     
@@ -123,9 +153,9 @@ void encoder_loop(void)
     
     int16_t delta = (int16_t)(lined_deg - degree_last);
 
-    // --- ¡¾ºËĞÄĞŞ¸´1¡¿£ºÀ¹½Ø²¢¹ıÂËÎïÀí²»¿ÉÄÜµÄ½Ç¶ÈÌø±ä£¨SPI Ã«´Ì£© ---
-    // Èç¹ûÌø±ä³¬¹ı 100£¨Ô¼µÈĞ§ 100r/s µÄÎïÀí¼«ÏŞ£©£¬ÇÒÃ»ÓĞ·¢ÉúÕæÊµµÄ¹ıÁãÌø±ä£¬
-    // ÔòÈÏÎªÕâÊÇÒ»´Î SPI Í¨ĞÅ´íÎó£¬Ç¿ÖÆ½« lined_deg ĞŞÕıÎªÁ¬ĞøÖµ¡£
+    // --- ã€æ ¸å¿ƒä¿®å¤1ã€‘ï¼šæ‹¦æˆªå¹¶è¿‡æ»¤ç‰©ç†ä¸å¯èƒ½çš„è§’åº¦è·³å˜ï¼ˆSPI æ¯›åˆºï¼‰ ---
+    // å¦‚æœè·³å˜è¶…è¿‡ 100ï¼ˆçº¦ç­‰æ•ˆ 100r/s çš„ç‰©ç†æé™ï¼‰ï¼Œä¸”æ²¡æœ‰å‘ç”ŸçœŸå®çš„è¿‡é›¶è·³å˜ï¼Œ
+    // åˆ™è®¤ä¸ºè¿™æ˜¯ä¸€æ¬¡ SPI é€šä¿¡é”™è¯¯ï¼Œå¼ºåˆ¶å°† lined_deg ä¿®æ­£ä¸ºè¿ç»­å€¼ã€‚
     if(delta > 100 && delta < (ENCODER_CPR - 100)) 
     {
         delta = 100;
@@ -137,8 +167,8 @@ void encoder_loop(void)
         lined_deg = (degree_last + delta) & (ENCODER_CPR - 1);
     }
 
-    // --- ¡¾ºËĞÄĞŞ¸´2¡¿£ºÔÚÂË³ıÃ«´Ìºó£¬°²È«µØ´¦Àí¹ıÁãµãºÍÈ¦ÊıÀÛ¼Æ ---
-    // enc_turns ÏÖÔÚÊÜµ½Ã«´Ì¹ıÂËÆ÷µÄ±£»¤£¬²»»áÒòÎª SPI ´íÎó¶øÄªÃûÆäÃî¶à/ÉÙÒ»È¦
+    // --- ã€æ ¸å¿ƒä¿®å¤2ã€‘ï¼šåœ¨æ»¤é™¤æ¯›åˆºåï¼Œå®‰å…¨åœ°å¤„ç†è¿‡é›¶ç‚¹å’Œåœˆæ•°ç´¯è®¡ ---
+    // enc_turns ç°åœ¨å—åˆ°æ¯›åˆºè¿‡æ»¤å™¨çš„ä¿æŠ¤ï¼Œä¸ä¼šå› ä¸º SPI é”™è¯¯è€Œè«åå…¶å¦™å¤š/å°‘ä¸€åœˆ
     if(delta > ENCODER_CPR_DIV) 
     {
         encoder.enc_turns--;
@@ -150,11 +180,11 @@ void encoder_loop(void)
         delta += ENCODER_CPR; 
     }
 
-    // ¸üĞÂÊÜ±£»¤µÄÊı¾İ£ºÈ·±£µç½Ç¶È¼ÆËãºÍÏÂÒ»ÅÄÎ»ÖÃ²Î¿¼ÊÇÆ½»¬µÄ
+    // æ›´æ–°å—ä¿æŠ¤çš„æ•°æ®ï¼šç¡®ä¿ç”µè§’åº¦è®¡ç®—å’Œä¸‹ä¸€æ‹ä½ç½®å‚è€ƒæ˜¯å¹³æ»‘çš„
     encoder.enc_degree_lined = lined_deg;
     degree_last = lined_deg;
 
-    // ËÙ¶È¼ÆËã
+    // é€Ÿåº¦è®¡ç®—
     {
         #define VEL_WINDOW_BITS      3
         #define VEL_WINDOW_SIZE      (1 << VEL_WINDOW_BITS)
@@ -200,13 +230,13 @@ void encoder_loop(void)
             vel_alpha_q8 += alpha_diff >> 3; 
         }
 
-        // --- ¡¾ºËĞÄĞŞ¸´3¡¿£ºÊ¹ÓÃ int64_t Ç¿ÖÆ×ª»»£¬·ÀÖ¹ (error * vel_alpha_q8) ½á¹ûÒç³ö 32 Î»·¶Î§ ---
-        // ÕâÊÇ½â¾ö¾²Ö¹Ê±ÓÉÓÚ SPI Ã«´ÌÎó´¥·¢ 160 rad/s ºã¶¨Òì³£ËÙ¶ÈµÄÊıÑ§¸ù±¾Ô­Òò
+        // --- ã€æ ¸å¿ƒä¿®å¤3ã€‘ï¼šä½¿ç”¨ int64_t å¼ºåˆ¶è½¬æ¢ï¼Œé˜²æ­¢ (error * vel_alpha_q8) ç»“æœæº¢å‡º 32 ä½èŒƒå›´ ---
+        // è¿™æ˜¯è§£å†³é™æ­¢æ—¶ç”±äº SPI æ¯›åˆºè¯¯è§¦å‘ 160 rad/s æ’å®šå¼‚å¸¸é€Ÿåº¦çš„æ•°å­¦æ ¹æœ¬åŸå› 
         velocity_temp_q14 += (int32_t)(((int64_t)error * vel_alpha_q8) >> 8);
         encoder.enc_velocity_q14 = -velocity_temp_q14;
     }
     
-    // µç½Ç¶È¼ÆËã (16-bit)
+    // ç”µè§’åº¦è®¡ç®— (16-bit)
     if(motor_ctrl.state == MIT)
     {
         uint16_t mech_ang = (lined_deg - encoder_config.elec_degree_calib) & (ENCODER_CPR - 1);
@@ -225,7 +255,52 @@ void encoder_loop(void)
 
 int enc_set_zero(void)
 {
-    load_ram_item_to_eeprom_from_key(3); 
+    int32_t vel = encoder.enc_velocity_q14;
+    // æ—‹è½¬æœ‰é€Ÿåº¦æ—¶ç¦æ­¢æ ‡é›¶ï¼Œé˜²æ­¢å…³ä¸­æ–­æ“¦å†™ Flash å¯¼è‡´ FOC å¤±æ§å’Œç”µæºå¼‚å¸¸
+    if(vel > ZERO_CALIB_MAX_VEL_Q14 || vel < -ZERO_CALIB_MAX_VEL_Q14)
+    {
+        return -1;
+    }
+    
+    // ã€å…³æ€»ä¸­æ–­ç‹¬å  SPIã€‘ï¼šæœç» 20kHz ä¸­æ–­æ‰“æ‰°ï¼Œé‡‡ç”¨ç¯å½¢ç›¸ä½è§£å·ç»•é‡‡æ · 8 æ¬¡æ±‚å‡å€¼
+    DINT;
+    
+    extern void ADP32F03x_usDelay(Uint32 Count);
+    uint16_t p0 = get_pri_enc_val();
+    uint16_t s0 = get_sec_enc_val();
+    int32_t pri_delta_sum = 0, sec_delta_sum = 0;
+
+    for(uint16_t i = 0; i < 8; i++)
+    {
+        int16_t dp = (int16_t)(get_pri_enc_val() - p0);
+        int16_t ds = (int16_t)(get_sec_enc_val() - s0);
+
+        if(dp > ENCODER_CPR_DIV) dp -= ENCODER_CPR;
+        else if(dp < -ENCODER_CPR_DIV) dp += ENCODER_CPR;
+
+        if(ds > ENCODER_CPR_DIV) ds -= ENCODER_CPR;
+        else if(ds < -ENCODER_CPR_DIV) ds += ENCODER_CPR;
+
+        pri_delta_sum += dp;
+        sec_delta_sum += ds;
+        ADP32F03x_usDelay(50L);
+    }
+
+    uint16_t pri_val = (uint16_t)((int32_t)p0 + (pri_delta_sum >> 3)) & (ENCODER_CPR - 1);
+    uint16_t sec_val = (uint16_t)((int32_t)s0 + (sec_delta_sum >> 3)) & (ENCODER_CPR - 1);
+
+    if(encoder_config.encoder_reverse)
+    {
+        pri_val = 16383 - pri_val;
+        sec_val = 16383 - sec_val;
+    }
+
+    ODObjs.in_encoder_offset = pri_val;
+    ODObjs.ex_encoder_offset = sec_val;
+
+    load_encoder_offsets_to_eeprom();
+    
+    ADP32F03x_usDelay(5000L); // å»¶æ—¶ 5ms ç¡®ä¿ Flash ç¼–ç¨‹å‘¨æœŸå®Œå…¨å®Œæˆ
     ResetDSP(); 
     return 0;
 } 
@@ -234,8 +309,8 @@ int16_t temp_cw[512] = {0};
 int16_t temp_ccw[512] = {0};
 
 /**
- * @brief 2khz±àÂëÆ÷Ğ£×¼³ÌĞò
- * @return 0 Ğ£×¼ÖĞ 1 Ğ£×¼Íê³É
+ * @brief 2khzç¼–ç å™¨æ ¡å‡†ç¨‹åº
+ * @return 0 æ ¡å‡†ä¸­ 1 æ ¡å‡†å®Œæˆ
  */
 uint16_t encoder_calibrate(void)
 {
@@ -252,7 +327,7 @@ uint16_t encoder_calibrate(void)
 
     switch(state)
     {
-        case 0: // Ëø¶¨Æ«ÒÆ
+        case 0: // é”å®šåç§»
         {
             Iq = 0;
             Id = cnt; 
@@ -265,7 +340,7 @@ uint16_t encoder_calibrate(void)
             }
             break;
         }
-        case 1: // Ì½²âÏàĞòºÍ±àÂëÆ÷·½Ïò
+        case 1: // æ¢æµ‹ç›¸åºå’Œç¼–ç å™¨æ–¹å‘
         {
             Iq = 0; Id = CALIB_CURRENT;
             encoder.elec_degree += 256;
@@ -275,19 +350,19 @@ uint16_t encoder_calibrate(void)
                 if(degree_dif > ENCODER_CPR_DIV) degree_dif -= ENCODER_CPR;
                 else if(degree_dif < -ENCODER_CPR_DIV) degree_dif += ENCODER_CPR;
 
-                // Ä¿±ê£ºIq > 0 ×ÜÊÇ²úÉúÎïÀíÕıÏò×ª¶¯
-                // Èç¹ûÔö¼Óµç½Ç¶Èµ¼ÖÂÔ­Ê¼»úĞµ½Ç¶È¼õĞ¡ (¼ÙÉè CW ¶ÔÓ¦Ô­Ê¼¼õĞ¡)
+                // ç›®æ ‡ï¼šIq > 0 æ€»æ˜¯äº§ç”Ÿç‰©ç†æ­£å‘è½¬åŠ¨
+                // å¦‚æœå¢åŠ ç”µè§’åº¦å¯¼è‡´åŸå§‹æœºæ¢°è§’åº¦å‡å° (å‡è®¾ CW å¯¹åº”åŸå§‹å‡å°)
                 if(degree_dif < 0) 
                 {
-                    encoder_config.encoder_reverse = 1; // ÉèÎª·´Ïò£¬Ê¹ 16383 - raw ±äÎªÔö¼Ó
-                    encoder_config.phase_reverse = 0;   // Õı³£ÏàĞò
+                    encoder_config.encoder_reverse = 1; // è®¾ä¸ºåå‘ï¼Œä½¿ 16383 - raw å˜ä¸ºå¢åŠ 
+                    encoder_config.phase_reverse = 0;   // æ­£å¸¸ç›¸åº
                 }
                 else 
                 {
-                    // Ôö¼Óµç½Ç¶Èµ¼ÖÂÔ­Ê¼Ôö¼Ó -> ÎïÀí·´Ïò (CCW)
-                    // ËµÃ÷ÏàÏß½Ó·´ÁË
-                    encoder_config.encoder_reverse = 0; // ÊıÖµÔö¼Ó
-                    encoder_config.phase_reverse = 1;   // ÏàĞò·´Ïò
+                    // å¢åŠ ç”µè§’åº¦å¯¼è‡´åŸå§‹å¢åŠ  -> ç‰©ç†åå‘ (CCW)
+                    // è¯´æ˜ç›¸çº¿æ¥åäº†
+                    encoder_config.encoder_reverse = 0; // æ•°å€¼å¢åŠ 
+                    encoder_config.phase_reverse = 1;   // ç›¸åºåå‘
                 }
                 mech_dir = 1;
                 
@@ -296,7 +371,7 @@ uint16_t encoder_calibrate(void)
             } 
             break;
         }
-        case 2: // ÖØĞÂËø¶¨ 0 Î»
+        case 2: // é‡æ–°é”å®š 0 ä½
         {
             Iq = 0; Id = CALIB_CURRENT;
             encoder.elec_degree = 0;
@@ -308,7 +383,7 @@ uint16_t encoder_calibrate(void)
             }
             break;
         }
-        case 3: // ÕıÏòÉ¨±í
+        case 3: // æ­£å‘æ‰«è¡¨
         {
             Iq = 0; Id = CALIB_CURRENT;
             static int16_t first_raw_val = 0;
@@ -367,7 +442,7 @@ uint16_t encoder_calibrate(void)
             }
             break;
         }
-        case 5: // ·´ÏòÉ¨±í
+        case 5: // åå‘æ‰«è¡¨
         {
             Iq = 0; Id = CALIB_CURRENT;
             static int16_t first_raw_val = 0;
@@ -415,7 +490,7 @@ uint16_t encoder_calibrate(void)
             encoder.elec_degree -= (MOTOR_POLE_PAIRS * 16);
             break;
         }
-        case 6: // ¼ÆËãÏßĞÔ»¯±í
+        case 6: // è®¡ç®—çº¿æ€§åŒ–è¡¨
         {
             Iq = 0; Id = 0; 
 

@@ -14,6 +14,42 @@
 
 // xinZhi first commit 2026/4/21
 
+uint32_t calculate_crc32(const uint16_t *data, uint32_t length) 
+{
+    uint32_t crc = 0xFFFFFFFFU;
+    
+    extern void KickDog(void);
+    for (uint32_t i = 0; i < length; i++) {
+        if ((i & 0x3FF) == 0) {
+            KickDog(); // 每计算 1024 个字喂一次狗，防止计算耗时过长导致看门狗复位
+        }
+        
+        uint16_t word = data[i];
+        
+        // 1. 处理低 8 位 (对应 PC 上的第 1 个字节)
+        crc ^= (uint32_t)(word & 0x00FFU);
+        for (int bit = 0; bit < 8; bit++) {
+            if (crc & 1U) {
+                crc = (crc >> 1) ^ 0xEDB88320U;
+            } else {
+                crc >>= 1;
+            }
+        }
+        
+        // 2. 处理高 8 位 (对应 PC 上的第 2 个字节)
+        crc ^= (uint32_t)((word >> 8) & 0x00FFU);
+        for (int bit = 0; bit < 8; bit++) {
+            if (crc & 1U) {
+                crc = (crc >> 1) ^ 0xEDB88320U;
+            } else {
+                crc >>= 1;
+            }
+        }
+    }
+    
+    return crc ^ 0xFFFFFFFFU;
+}
+
 stimer_t stimer_main;
 
 #define DEBUG 0

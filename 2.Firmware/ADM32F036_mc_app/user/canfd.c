@@ -201,6 +201,8 @@ interrupt void canfd_IsrHander1(void)
 }
 
 float torque = 0;
+uint32_t expected_crc;
+uint32_t actual_crc;
 
 /**
  * @brief CAN 数据帧解析函数
@@ -322,10 +324,21 @@ static void parse_frame(canFrame_t *frame)
                 }
                 else if(*(uint32_t*)&frame->data[0] == 0xFFFFFFFF)
                 {
-                    *(uint32_t*)&frame->data[0] = 0xFFFFFFFF; // ack
-                    sendCanFrame_fifo(frame); 
-                    ADP32F03x_usDelay(1000);
-                    jump_to_bootloader();
+                    extern uint32_t calculate_crc32(const uint16_t *data, uint32_t length);
+                    expected_crc = *(uint32_t *)(DOWNLOAD_ADDR + DOWNLOAD_SIZE - 2);
+                    actual_crc = calculate_crc32((const uint16_t *)DOWNLOAD_ADDR, DOWNLOAD_SIZE - 2);
+                    
+                    if(actual_crc == expected_crc)
+                    {
+                        *(uint32_t*)&frame->data[0] = 0xFFFFFFFF; // ack
+                        sendCanFrame_fifo(frame); 
+                        ADP32F03x_usDelay(1000);
+                        jump_to_bootloader();
+                    }
+                    else
+                    {
+                        *(uint32_t*)&frame->data[0] = 0x00000000; // nack
+                    }
                 }
             }
             else

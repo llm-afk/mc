@@ -33,7 +33,7 @@ void jump_to_bootloader(void)
 #pragma CODE_SECTION(write_iap_data, "ramfuncs");
 void write_iap_data(uint16_t *data)
 {
-    if((addr_offset + 4) < DOWNLOAD_SIZE)
+    if((addr_offset + 4) <= DOWNLOAD_SIZE)
     {
         flash_program((uint16_t*)(DOWNLOAD_ADDR + addr_offset), data, 4);
         addr_offset+=4;

@@ -8,33 +8,34 @@
 #include <string.h>
 
 /* note:
-eeprom¿Õ¼äÊµ¼ÊµÄ´æ´¢½á¹¹£º
-¸ù¾İkeyË³ĞòÍùÏÂ´æ£ºnµØÖ·Êı¾İ + 1µØÖ·checksum + 1µØÖ·flag
+eepromç©ºé—´å®é™…çš„å­˜å‚¨ç»“æ„ï¼š
+æ ¹æ®keyé¡ºåºå¾€ä¸‹å­˜ï¼šnåœ°å€æ•°æ® + 1åœ°å€checksum + 1åœ°å€flag
 
-ÔÚeeprom_item_listÖĞ×¢²áµÄ²ÎÊıµÄkey±ØĞëË³Ğò´Ó0¿ªÊ¼µİÔö
+åœ¨eeprom_item_listä¸­æ³¨å†Œçš„å‚æ•°çš„keyå¿…é¡»é¡ºåºä»0å¼€å§‹é€’å¢
 */
 
-#define START_ADDR CONFIG_ADDR // ·ÖÅäµÄeepromÕ¼ÓÃµÄflashµÄÉÈÇøÆğÊ¼µØÖ·
-#define ADDR_NUM 1024 // ·ÖÅäµØÖ·ÊıÁ¿
+#define START_ADDR CONFIG_ADDR // åˆ†é…çš„eepromå ç”¨çš„flashçš„æ‰‡åŒºèµ·å§‹åœ°å€
+#define ADDR_NUM 1024 // åˆ†é…åœ°å€æ•°é‡
 
-// ´íÎóÑÚÂë
-#define ERROR_MASK_ERASE_FAIL    (1 << 0) // ÉÈÇø²Á³ıÊ§°Ü
-#define ERROR_MASK_WRITE_FAIL    (1 << 1) // ÉÈÇøĞ´ÈëÊ§°Ü
-#define ERROR_MASK_ER_DATA_ERROR (1 << 2) // EEPROMÖĞÊı¾İ³ö´í
+// é”™è¯¯æ©ç 
+#define ERROR_MASK_ERASE_FAIL    (1 << 0) // æ‰‡åŒºæ“¦é™¤å¤±è´¥
+#define ERROR_MASK_WRITE_FAIL    (1 << 1) // æ‰‡åŒºå†™å…¥å¤±è´¥
+#define ERROR_MASK_ER_DATA_ERROR (1 << 2) // EEPROMä¸­æ•°æ®å‡ºé”™
 
 typedef struct{
-    uint16_t key; // Ã¿¸ö²ÎÊıÒ»¸öÎ¨Ò» ID
-    uint16_t len; // ³¤¶È£¨ÒÔ 16bit Îªµ¥Î»£©
-    void *ramAddr; // ²ÎÊıÔÚ RAM ÖĞµÄµØÖ·
+    uint16_t key; // æ¯ä¸ªå‚æ•°ä¸€ä¸ªå”¯ä¸€ ID
+    uint16_t len; // é•¿åº¦ï¼ˆä»¥ 16bit ä¸ºå•ä½ï¼‰
+    void *ramAddr; // å‚æ•°åœ¨ RAM ä¸­çš„åœ°å€
 }eeprom_item_t;
 
 typedef struct{
-    uint16_t item_num; // ²ÎÊıÊıÁ¿
+    uint16_t item_num; // å‚æ•°æ•°é‡
 }eeprom_t;
 
 void eeprom_init(void);
 uint16_t load_eeprom_to_ram(void);
 uint16_t load_ram_item_to_eeprom_from_key(uint16_t key);
+uint16_t load_encoder_offsets_to_eeprom(void);
 
 uint16_t flash_erase_sector(uint16_t sectorMask);
 uint16_t flash_program(uint16_t *flashAddr, uint16_t *dataBuf, uint16_t length);

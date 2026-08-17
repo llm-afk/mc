@@ -17,38 +17,40 @@
 
 #define MOTOR_POLE_PAIRS        (10)
 
-#define MAIN_ENCODER_TEETH      (17)   // Ö÷³İ
-#define EX_ENCODER_TEETH        (18)   // ¸±³İ
+#define MAIN_ENCODER_TEETH      (17)   // ä¸»é½¿
+#define EX_ENCODER_TEETH        (18)   // å‰¯é½¿
+
+#define ZERO_CALIB_MAX_VEL_Q14  (8192) // çº¦ 0.5 rad/s ç”µæœºè½¬é€Ÿé—¨é™ï¼Œè¶…è¿‡æ­¤è½¬é€Ÿç¦æ­¢æ ‡é›¶å‰¯é½¿
 
 typedef struct{
-    uint16_t elec_degree_calib; // ½Ç¶ÈĞ£×¼Öµ
-    int16_t linearity_table[CALIB_TABLE_SIZE];  // Ïß»¯
-    int16_t encoder_reverse; // ±àÂëÆ÷·´Ïò
-    int16_t phase_reverse;   // µç»úÏàĞò·´Ïò
+    uint16_t elec_degree_calib; // è§’åº¦æ ¡å‡†å€¼
+    int16_t linearity_table[CALIB_TABLE_SIZE];  // çº¿åŒ–
+    int16_t encoder_reverse; // ç¼–ç å™¨åå‘
+    int16_t phase_reverse;   // ç”µæœºç›¸åºåå‘
 }encoder_config_t;
 
 typedef struct{
-    volatile uint16_t enc_degree_raw;      // Ô­Ê¼±àÂëÆ÷Öµ
-    volatile uint16_t enc_degree_raw_reversed; // ·´×ªºóµÄÔ­Ê¼±àÂëÆ÷Öµ
-    volatile uint16_t enc_degree_lined;    // ÏßĞÔ»¯ºóµÄ±àÂëÆ÷Öµ
-    volatile int32_t enc_turns;            // ±àÂëÆ÷¶ËÀÛ¼ÓÈ¦Êı
-    volatile int32_t enc_velocity_q14;     // ±àÂëÆ÷¶ËËÙ¶È (rad/s)
+    volatile uint16_t enc_degree_raw;      // åŸå§‹ç¼–ç å™¨å€¼
+    volatile uint16_t enc_degree_raw_reversed; // åè½¬åçš„åŸå§‹ç¼–ç å™¨å€¼
+    volatile uint16_t enc_degree_lined;    // çº¿æ€§åŒ–åçš„ç¼–ç å™¨å€¼
+    volatile int32_t enc_turns;            // ç¼–ç å™¨ç«¯ç´¯åŠ åœˆæ•°
+    volatile int32_t enc_velocity_q14;     // ç¼–ç å™¨ç«¯é€Ÿåº¦ (rad/s)
 
-    volatile uint16_t ex_enc_degree_raw;   // ¸±±àÂëÆ÷Ô­Ê¼Öµ
-    volatile uint16_t ex_enc_degree_lined; // ¸±±àÂëÆ÷ÏßĞÔĞ£×¼Öµ
+    volatile uint16_t ex_enc_degree_raw;   // å‰¯ç¼–ç å™¨åŸå§‹å€¼
+    volatile uint16_t ex_enc_degree_lined; // å‰¯ç¼–ç å™¨çº¿æ€§æ ¡å‡†å€¼
     
-    volatile int64_t degree_q14;           // ¼õËÙ¶Ë½Ç¶È (rad)
-    volatile int32_t velocity_q14;         // ¼õËÙ¶ËËÙ¶È (rad/s)
+    volatile int64_t degree_q14;           // å‡é€Ÿç«¯è§’åº¦ (rad)
+    volatile int32_t velocity_q14;         // å‡é€Ÿç«¯é€Ÿåº¦ (rad/s)
 
-    volatile uint16_t elec_degree;         // µç½Ç¶È
+    volatile uint16_t elec_degree;         // ç”µè§’åº¦
 
-    volatile uint16_t in_enc_deg_zero_conf;// Ôİ´æeepromÖĞ´æ´¢µÄ±êÁãÊ±¿ÌÖ÷±àÂëÆ÷µÄÖµ
-    volatile uint16_t ex_enc_deg_zero_conf;// Ôİ´æeepromÖĞ´æ´¢µÄ±êÁãÊ±¿Ì¸±±àÂëÆ÷µÄÖµ
-    volatile int16_t  enc_error_conf;      // Ôİ´æeepromÖĞ´æ´¢µÄ±êÁãÊ±¿ÌÁ½¸ö±àÂëÆ÷µÄ²îÖµ
-    volatile uint16_t in_enc_deg_zero;     // ÉÏµçË²¼äÖ÷±àÂëÆ÷µÄÖµ
-    volatile uint16_t ex_enc_deg_zero;     // ÉÏµçË²¼ä¸±±àÂëÆ÷µÄÖµ
-    volatile int16_t  enc_error;           // ÉÏµçË²¼äÁ½¸ö±àÂëÆ÷µÄ²îÖµ
-    volatile int16_t  error;               // ±êÁãÊ±¿ÌË«±à²îÖµºÍÉÏµçË²¼äË«²îÖµÕâÁ½¸ö²îÖµµÄ²îÖµ£¬¿ÉÒÔÓÃÀ´ÃèÊöÉÏµçºóÖ÷±àÂëÆ÷µÄ´ÅÌúµ½µ×ÍùÄÇ¸ö·½ÏòĞı×ªÁË¶àÉÙÈ¦
+    volatile uint16_t in_enc_deg_zero_conf;// æš‚å­˜eepromä¸­å­˜å‚¨çš„æ ‡é›¶æ—¶åˆ»ä¸»ç¼–ç å™¨çš„å€¼
+    volatile uint16_t ex_enc_deg_zero_conf;// æš‚å­˜eepromä¸­å­˜å‚¨çš„æ ‡é›¶æ—¶åˆ»å‰¯ç¼–ç å™¨çš„å€¼
+    volatile int16_t  enc_error_conf;      // æš‚å­˜eepromä¸­å­˜å‚¨çš„æ ‡é›¶æ—¶åˆ»ä¸¤ä¸ªç¼–ç å™¨çš„å·®å€¼
+    volatile uint16_t in_enc_deg_zero;     // ä¸Šç”µç¬é—´ä¸»ç¼–ç å™¨çš„å€¼
+    volatile uint16_t ex_enc_deg_zero;     // ä¸Šç”µç¬é—´å‰¯ç¼–ç å™¨çš„å€¼
+    volatile int16_t  enc_error;           // ä¸Šç”µç¬é—´ä¸¤ä¸ªç¼–ç å™¨çš„å·®å€¼
+    volatile int16_t  error;               // æ ‡é›¶æ—¶åˆ»åŒç¼–å·®å€¼å’Œä¸Šç”µç¬é—´åŒå·®å€¼è¿™ä¸¤ä¸ªå·®å€¼çš„å·®å€¼ï¼Œå¯ä»¥ç”¨æ¥æè¿°ä¸Šç”µåä¸»ç¼–ç å™¨çš„ç£é“åˆ°åº•å¾€é‚£ä¸ªæ–¹å‘æ—‹è½¬äº†å¤šå°‘åœˆ
 }encoder_t;
 
 extern encoder_config_t encoder_config;
