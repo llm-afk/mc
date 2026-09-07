@@ -125,12 +125,6 @@ int MC_controlword_update(void)
         {
             // 只允许清除普通软故障，必须保留 SN锁 和 编码器未标定锁
             ODObjs.error_code &= (ERR_NO_SN | ERR_ENC_CALIB);
-            // 【FIX】如果电机已经停稳，允许通过复位指令回到 INIT 重新待命
-            if(motor_ctrl.state == STOPPED) 
-            {
-                motor_ctrl.state = INIT;
-                fault_damp_timer = 0;
-            }
             break;
         }
         case CW_CMD_DEV_ENCODER_CALIB: // 编码器校准
@@ -310,13 +304,15 @@ void MC_servo_loop(void)
         }
         case STOPPED:
         {
-            Iq = 0;
-            Id = 0;
             // 【FIX】当电机已经完全停稳且所有错误标志已被后台清除，自动切回 INIT 待命
             if (ODObjs.error_code == 0) 
             {
                 motor_ctrl.state = INIT;
                 fault_damp_timer = 0;
+            }
+            if(RunSignal == 1)
+            {
+                RunSignal = 0;
             }
             break;
         }

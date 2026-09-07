@@ -1157,11 +1157,11 @@ void InitSetAdc(void)
                                         // 如果设置10APEAK 过流点，则 10 / 21)*512+512 = 755
                                         // 如果设置10ARMS 过流点，则 10*1.4142 / 21)*512+512 = 856
                                         ///////////////////////////////////////////////////////////////
-    Comp3Regs.COMPCTL.bit.SYNCSEL       = 0;  // Asynchronous version of Comparator output is passed
+    Comp3Regs.COMPCTL.bit.SYNCSEL       = 1;  // Asynchronous version of Comparator output is passed
     Comp3Regs.COMPCTL.bit.CMPINV        = 1;  // Inverted output of comparator is passed
     Comp3Regs.COMPCTL.bit.COMPSOURCE    = 0;  // input of comparator connected to internal DAC
-    Comp3Regs.COMPCTL.bit.QUALSEL       = 10; // Qualification Period for synchronized output of the comparator
-    Comp3Regs.COMPCTL.bit.COMPDACEN     = 0;  // Comparator/DAC Enable
+    Comp3Regs.COMPCTL.bit.QUALSEL       = 31; // Qualification Period for synchronized output of the comparator
+    Comp3Regs.COMPCTL.bit.COMPDACEN     = 1;  // Comparator/DAC Enable
 /*
     Comp2Regs.DACVAL.bit.DACVAL = CBCCurPointInternal;
                                         // 硬件过流比较器配置   2.5V  1024->3V, about 685, 5*1.4142A = 7.1

@@ -141,24 +141,119 @@ void ma900_write_reg_crc(uint16_t reg_addr, uint16_t data_val)
 uint16_t get_pri_enc_val(void)
 {
     uint16_t frame[2] = {0};
-    
-    PRI_CS_L(); 
-    frame[0] = spi_transfer(0x3000); 
-    frame[1] = spi_transfer(0x0000); 
+    uint16_t raw14;
+    uint16_t current;
+    int32_t d1;
+    int32_t d2;
+    int32_t a;
+    int32_t b;
+    int32_t c;
+    int32_t temp;
+    int32_t filtered;
+    static uint16_t prev1 = 0;
+    static uint16_t prev2 = 0;
+    static uint16_t filter_valid = 0;
+
+    PRI_CS_L();
+    frame[0] = spi_transfer(0x3000);
+    frame[1] = spi_transfer(0x0000);
     PRI_CS_H();
 
-    return 16384 - ((uint16_t)((frame[0] & 0xFFF0) | (frame[1] >> 12)) >> 2);
+    raw14 = (uint16_t)(
+        (((frame[0] & 0xFFF0U) |
+        (frame[1] >> 12)) >> 2) & 0x3FFFU
+    );
+
+    current = (uint16_t)((0x4000UL - (uint32_t)raw14) & 0x3FFFUL);
+
+    /* Three-sample circular median filter. */
+    if(!filter_valid)
+    {
+        prev1 = current;
+        prev2 = current;
+        filter_valid = 1;
+        return current;
+    }
+
+    d1 = (int32_t)prev1 - (int32_t)current;
+    d2 = (int32_t)prev2 - (int32_t)current;
+    if(d1 > 8192L) d1 -= 16384L;
+    else if(d1 < -8192L) d1 += 16384L;
+    if(d2 > 8192L) d2 -= 16384L;
+    else if(d2 < -8192L) d2 += 16384L;
+
+    /* The median of {0, d1, d2} is the filtered circular offset. */
+    a = 0;
+    b = d1;
+    c = d2;
+    if(a > b) { temp = a; a = b; b = temp; }
+    if(b > c) { temp = b; b = c; c = temp; }
+    if(a > b) { temp = a; a = b; b = temp; }
+
+    filtered = (int32_t)current + b;
+    if(filtered < 0L) filtered += 16384L;
+    else if(filtered >= 16384L) filtered -= 16384L;
+
+    prev2 = prev1;
+    prev1 = current;
+    return (uint16_t)filtered;
 }
 
 #pragma CODE_SECTION(get_sec_enc_val,"ramfuncs");
 uint16_t get_sec_enc_val(void)
 {
     uint16_t frame[2] = {0};
-    
-    SEC_CS_L(); 
-    frame[0] = spi_transfer(0x3000); 
-    frame[1] = spi_transfer(0x0000); 
+    uint16_t current;
+    int32_t d1;
+    int32_t d2;
+    int32_t a;
+    int32_t b;
+    int32_t c;
+    int32_t temp;
+    int32_t filtered;
+    static uint16_t prev1 = 0;
+    static uint16_t prev2 = 0;
+    static uint16_t filter_valid = 0;
+
+    SEC_CS_L();
+    frame[0] = spi_transfer(0x3000);
+    frame[1] = spi_transfer(0x0000);
     SEC_CS_H();
 
-    return (uint16_t)((frame[0] & 0xFFF0) | (frame[1] >> 12)) >> 2;
+    current = (uint16_t)(
+        (((frame[0] & 0xFFF0U) |
+        (frame[1] >> 12)) >> 2) & 0x3FFFU
+    );
+
+    /* Three-sample circular median filter. */
+    if(!filter_valid)
+    {
+        prev1 = current;
+        prev2 = current;
+        filter_valid = 1;
+        return current;
+    }
+
+    d1 = (int32_t)prev1 - (int32_t)current;
+    d2 = (int32_t)prev2 - (int32_t)current;
+    if(d1 > 8192L) d1 -= 16384L;
+    else if(d1 < -8192L) d1 += 16384L;
+    if(d2 > 8192L) d2 -= 16384L;
+    else if(d2 < -8192L) d2 += 16384L;
+
+    /* The median of {0, d1, d2} is the filtered circular offset. */
+    a = 0;
+    b = d1;
+    c = d2;
+    if(a > b) { temp = a; a = b; b = temp; }
+    if(b > c) { temp = b; b = c; c = temp; }
+    if(a > b) { temp = a; a = b; b = temp; }
+
+    filtered = (int32_t)current + b;
+    if(filtered < 0L) filtered += 16384L;
+    else if(filtered >= 16384L) filtered -= 16384L;
+
+    prev2 = prev1;
+    prev1 = current;
+    return (uint16_t)filtered;
 }

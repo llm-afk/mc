@@ -69,12 +69,12 @@ unsigned int  OVER_DC_VOL_KP      =  800;
 unsigned int MaxAllowUdcLimit     =  170;
 unsigned int MidAllowUdcLimit     =  155;
 
-#define DEAD_TIME                    8           // 设置死区时间，实际的上下管的死区时间是 DEAD_TIME+20 单位0.01us //实际测量0时死区位180ns左右，够用了
+#define DEAD_TIME                    40           // 设置死区时间，实际的上下管的死区时间是 DEAD_TIME+20 单位0.01us //实际测量0时死区位180ns左右，够用了
 #define DEAD_COMPENATION_TIME        0           // 死区补偿时间，0.25US
 unsigned int DeadTimeInternal     =  ((long)DEAD_TIME * DSP_CLOCK) / 100;               // 死区时间
 unsigned int DeadTimeCompInternal =  ((long)DEAD_COMPENATION_TIME * DSP_CLOCK) / 100;   // 死区补偿时间
 
-#define HARDWARE_OVER_CUR            (MAX_PEAK_CUR_3_3V *1.0f) //! 硬件比较器的过流阈值，根据硬件设计决定
+#define HARDWARE_OVER_CUR            (MAX_PEAK_CUR_3_3V *0.95f) //! 硬件比较器的过流阈值，根据硬件设计决定
 #define HARDWARE_CBC_CUR             (MAX_PEAK_CUR_3_3V *0.95f) // CBC过流比较值, 8.00A 逐波限流实际没有用到
 unsigned int OverCurPointInternal =  ((long)HARDWARE_OVER_CUR << 9) / MAX_PEAK_CUR_3_3V + 512;   // 硬件过流比较值
 unsigned int CBCCurPointInternal  =  ((long)HARDWARE_CBC_CUR  << 9) / MAX_PEAK_CUR_3_3V + 512;   // CBC过流比较值

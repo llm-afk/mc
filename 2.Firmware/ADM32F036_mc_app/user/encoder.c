@@ -105,6 +105,9 @@ void encoder_loop(void)
     uint16_t sec_enc_val = get_sec_enc_val();
     uint16_t is_reverse = encoder_config.encoder_reverse;
 
+    // 主编码器必须保持在 14 位范围内，避免异常值进入后级计算
+    pri_enc_val &= 0x3FFFU;
+
     uint16_t raw_deg_rev;
     uint16_t ex_raw;
 
@@ -120,6 +123,9 @@ void encoder_loop(void)
         raw_deg_rev = pri_enc_val;
         ex_raw      = sec_enc_val;
     }
+
+    // 进入线性化表前再次兜底，确保 LUT 下标不会越界
+    raw_deg_rev &= 0x3FFFU;
 
     encoder.enc_degree_raw_reversed = raw_deg_rev;
     encoder.ex_enc_degree_raw       = ex_raw;
