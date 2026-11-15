@@ -37,7 +37,7 @@ static void estimate_phase_resistance(void)
     float I2 = I_amp * I_amp;
 
     float elec_speed = (float)encoder.velocity_q14 * (1.0f / 16384.0f)
-                     * (float)GEAR_RATIO * (float)MOTOR_POLE_PAIRS;
+                     * motor_profile.gear_ratio * (float)motor_profile.pole_pairs;
 
     #define STALL_HOLD_TICKS  20   // 200ms @ 100Hz
     static uint16_t stall_ticks = 0;
@@ -158,15 +158,17 @@ void MC_servo_loop(void)
     // =========================================================================
     int64_t total_ticks = ((int64_t)encoder.enc_turns << 14)  // 等效于 * 16384
                         + (int32_t)((int16_t)encoder.enc_degree_lined + (int16_t)encoder.in_enc_deg_zero)
-                        - (int32_t)encoder.error * 18;
+                        - (int32_t)encoder.error * motor_profile.aux_teeth;
 
     // =========================================================================
     // 2. 将浮点乘除转换为 Q30 格式的 64位定点乘法
     // =========================================================================
-    encoder.degree_q14 = (-(total_ticks * 562203932LL) >> 30) + 8565;
+    encoder.degree_q14 = (-(total_ticks * motor_profile.position_scale_q30) >> 30) + motor_profile.position_bias_q14;
+    if (motor_profile.output_reverse) encoder.degree_q14 = -encoder.degree_q14;
     
-    // 假设 GEAR_RATIO_INV 是常量宏
-    encoder.velocity_q14 = (int32_t)(encoder.enc_velocity_q14 * GEAR_RATIO_INV);
+    // 使用启动时算好的减速比倒数，换算为关节速度。
+    encoder.velocity_q14 = (int32_t)(encoder.enc_velocity_q14 * motor_profile.gear_ratio_inverse);
+    if (motor_profile.output_reverse) encoder.velocity_q14 = -encoder.velocity_q14;
 
     // =========================================================================
     // 【优化 2】优化 64 位数据的绝对值计算与突变滤波
@@ -231,23 +233,23 @@ void MC_servo_loop(void)
             // =========================================================================
             // 【优化 5】限幅链
             // =========================================================================
-            #define MOTOR_TORQUE_MAX  30.0f                                   
-            #define DRV_IQ_MAX        ((int32_t)(35.0f * MIT_IQ_SCALE))      
+            const float motor_torque_max = motor_profile.torque_limit_nm;
+            const int32_t drv_iq_max = (int32_t)(motor_profile.current_limit_a * MIT_IQ_SCALE);
 
             float t_limit = ODObjs.torque_limit;
-            t_limit = (t_limit > MOTOR_TORQUE_MAX) ? MOTOR_TORQUE_MAX : ((t_limit < 0.0f) ? 0.0f : t_limit);
+            t_limit = (t_limit > motor_torque_max) ? motor_torque_max : ((t_limit < 0.0f) ? 0.0f : t_limit);
             ODObjs.torque_limit = t_limit;
 
             int32_t out_limit = (int32_t)(t_limit * 16384.0f);
             out_q14 = (out_q14 > out_limit) ? out_limit : ((out_q14 < -out_limit) ? -out_limit : out_q14);
 
 #if STALL_TEST_MODE
-            Id = (int32_t)(Torque_To_Iq((float)(-out_q14) * 0.00006103515625f) * MIT_IQ_SCALE);
-            Id = (Id > DRV_IQ_MAX) ? DRV_IQ_MAX : ((Id < -DRV_IQ_MAX) ? -DRV_IQ_MAX : Id);
+            Id = (int32_t)(Torque_To_Iq((float)(motor_profile.output_reverse ? out_q14 : -out_q14) * 0.00006103515625f) * MIT_IQ_SCALE);
+            Id = (Id > drv_iq_max) ? drv_iq_max : ((Id < -drv_iq_max) ? -drv_iq_max : Id);
             Iq = 0;
 #else
-            Iq = (int32_t)(Torque_To_Iq((float)(-out_q14) * 0.00006103515625f) * MIT_IQ_SCALE);
-            Iq = (Iq > DRV_IQ_MAX) ? DRV_IQ_MAX : ((Iq < -DRV_IQ_MAX) ? -DRV_IQ_MAX : Iq);
+            Iq = (int32_t)(Torque_To_Iq((float)(motor_profile.output_reverse ? out_q14 : -out_q14) * 0.00006103515625f) * MIT_IQ_SCALE);
+            Iq = (Iq > drv_iq_max) ? drv_iq_max : ((Iq < -drv_iq_max) ? -drv_iq_max : Iq);
             Id = 0;
 #endif
 
@@ -266,9 +268,9 @@ void MC_servo_loop(void)
                 if(damp_out_q14 > damp_limit) damp_out_q14 = damp_limit;
                 else if(damp_out_q14 < -damp_limit) damp_out_q14 = -damp_limit;
 
-                Iq = (int32_t)(Torque_To_Iq((float)(-damp_out_q14) * 0.00006103515625f) * MIT_IQ_SCALE);
-                if(Iq > DRV_IQ_MAX) Iq = DRV_IQ_MAX;
-                else if(Iq < -DRV_IQ_MAX) Iq = -DRV_IQ_MAX;
+                Iq = (int32_t)(Torque_To_Iq((float)(motor_profile.output_reverse ? damp_out_q14 : -damp_out_q14) * 0.00006103515625f) * MIT_IQ_SCALE);
+                if(Iq > drv_iq_max) Iq = drv_iq_max;
+                else if(Iq < -drv_iq_max) Iq = -drv_iq_max;
                 Id = 0;
 
                 fault_damp_timer++;

@@ -63,6 +63,11 @@ void main(void)
     for(volatile uint32_t i = 0; i < 100000; i++) asm(" NOP");
 
     InitSysCtrl();
+    if (motor_profile_init() != 0)
+    {
+        // 参数非法时停在外设及功率级初始化之前，避免带错误配置启动。
+        for(;;) {}
+    }
     InitInterrupt();                 
     InitPeripherals();             
     InitForMotorApp();        

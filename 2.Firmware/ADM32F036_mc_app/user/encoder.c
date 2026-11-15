@@ -2,7 +2,7 @@
 #include "flash_eeprom.h"
 
 encoder_config_t encoder_config = {
-    .elec_degree_calib = 1675,
+    .elec_degree_calib = 0, // 启动时由内部参数设置，随后按原流程恢复旧校准记录
     .linearity_table = {0},
     .encoder_reverse = 0,
     .phase_reverse = 0,
@@ -246,16 +246,9 @@ void encoder_loop(void)
     if(motor_ctrl.state == MIT)
     {
         uint16_t mech_ang = (lined_deg - encoder_config.elec_degree_calib) & (ENCODER_CPR - 1);
-        uint16_t e_deg_temp = (uint16_t)(mech_ang * (MOTOR_POLE_PAIRS * 4));
-
-        if(encoder_config.phase_reverse)
-        {
-            encoder.elec_degree = e_deg_temp;
-        }
-        else
-        {
-            encoder.elec_degree = 65535 - e_deg_temp;   
-        }
+        // 校准已用 encoder_reverse 统一方向，LUT 和零偏也在同一坐标中。
+        // 闭环继续使用该方向，避免再按 phase_reverse 翻转一次。
+        encoder.elec_degree = (uint16_t)(mech_ang * (motor_profile.pole_pairs * 4));
     }
 }
 
@@ -329,7 +322,7 @@ uint16_t encoder_calibrate(void)
     static uint16_t ex_calib_min = 0;
     static uint16_t ex_calib_max = 0;
 
-    #define CALIB_CURRENT 1000 
+    const uint16_t calibration_current = motor_profile.calibration_current_code;
 
     switch(state)
     {
@@ -338,7 +331,7 @@ uint16_t encoder_calibrate(void)
             Iq = 0;
             Id = cnt; 
             encoder.elec_degree = 0;
-            if(cnt >= CALIB_CURRENT)
+            if(cnt >= calibration_current)
             {
                 enc_degree_raw_start = encoder.enc_degree_raw;
                 cnt = 0;
@@ -348,8 +341,8 @@ uint16_t encoder_calibrate(void)
         }
         case 1: // 探测相序和编码器方向
         {
-            Iq = 0; Id = CALIB_CURRENT;
-            encoder.elec_degree += 256;
+            Iq = 0; Id = calibration_current;
+            encoder.elec_degree += motor_profile.probe_electrical_step;
             if(cnt >= 512) 
             {
                 int16_t degree_dif = (int16_t)(encoder.enc_degree_raw - enc_degree_raw_start);
@@ -379,7 +372,7 @@ uint16_t encoder_calibrate(void)
         }
         case 2: // 重新锁定 0 位
         {
-            Iq = 0; Id = CALIB_CURRENT;
+            Iq = 0; Id = calibration_current;
             encoder.elec_degree = 0;
             if(cnt >= 1000)
             {
@@ -391,7 +384,7 @@ uint16_t encoder_calibrate(void)
         }
         case 3: // 正向扫表
         {
-            Iq = 0; Id = CALIB_CURRENT;
+            Iq = 0; Id = calibration_current;
             static int16_t first_raw_val = 0;
             if(cnt == 1)
             {
@@ -434,12 +427,12 @@ uint16_t encoder_calibrate(void)
                 cnt = 0;
                 state = 4;
             }
-            encoder.elec_degree += (MOTOR_POLE_PAIRS * 16); 
+            encoder.elec_degree += (motor_profile.pole_pairs * 16);
             break;
         }
         case 4: 
         {
-            Iq = 0; Id = CALIB_CURRENT;
+            Iq = 0; Id = calibration_current;
             encoder.elec_degree = 0; 
             if(cnt >= 1000)
             {
@@ -450,7 +443,7 @@ uint16_t encoder_calibrate(void)
         }
         case 5: // 反向扫表
         {
-            Iq = 0; Id = CALIB_CURRENT;
+            Iq = 0; Id = calibration_current;
             static int16_t first_raw_val = 0;
             if(cnt == 1)
             {
@@ -493,7 +486,7 @@ uint16_t encoder_calibrate(void)
                 cnt = 0;
                 state = 6;
             }
-            encoder.elec_degree -= (MOTOR_POLE_PAIRS * 16);
+            encoder.elec_degree -= (motor_profile.pole_pairs * 16);
             break;
         }
         case 6: // 计算线性化表

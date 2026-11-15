@@ -1,4 +1,5 @@
 #include "utils.h"
+#include "motor_profile.h"
 
 /**
  * @brief 计算 uint64_t 的整数平方根
@@ -83,7 +84,7 @@ float imt_current_to_float(int16_t M, int16_t T, float rated_cur)
 
     // rated_cur *= 1.41421356f;
     // return (float)mag * rated_cur / 40960.0f;
-    return (float)-mag * rated_cur * 3.4526703e-5f;
+    return (float)(motor_profile.output_reverse ? mag : -mag) * rated_cur * 3.4526703e-5f;
 }
 
 #pragma CODE_SECTION(sort2, "ramfuncs");

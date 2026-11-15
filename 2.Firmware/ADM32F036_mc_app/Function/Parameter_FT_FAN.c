@@ -84,12 +84,12 @@ unsigned int CBCCurPointInternal  =  ((long)HARDWARE_CBC_CUR  << 9) / MAX_PEAK_C
 ///////////////////////////////////////////////////////////////////////////////////////
 unsigned int MOTOR_RATED_POWER  =  2000;    //0.1W为单位
 unsigned int MOTOR_RATED_VOL    =  23;  //! 相电压的有效值，输入实际的母线电压/1.414
-unsigned int MOTOR_RATED_CUR    =  280;  //! 0.1A,希望的最大相电流的有效值，注意q轴电流等于相电流的峰值，所以允许的最大q轴电流是MOTOR_RATED_CUR的1.414倍
+unsigned int MOTOR_RATED_CUR    =  0;  //! 0.1A,希望的最大相电流的有效值，注意q轴电流等于相电流的峰值，所以允许的最大q轴电流是MOTOR_RATED_CUR的1.414倍
 unsigned int LOWER_LIMIT_FREQ   =  0;
 
-unsigned int PMSM_LD            =  270;//250;//30;//150;//432;          // 37uH
-unsigned int PMSM_LQ            =  326;//260;//33;//170;//464;          // 50uH
-unsigned int PMSM_RS            =  269;//150;//25;//50;//251;          // 11mohm
+unsigned int PMSM_LD            =  0;//250;//30;//150;//432;          // 37uH
+unsigned int PMSM_LQ            =  0;//260;//33;//170;//464;          // 50uH
+unsigned int PMSM_RS            =  0;//150;//25;//50;//251;          // 11mohm
 unsigned int PMS_L_R_UNIT       =  0;    
 #ifdef KE_WIDE_RANGE
 unsigned int PMSM_KE            =  80;//22;//40;//60;          // Ke = 43

@@ -5,20 +5,14 @@
 #include "SPIcomm.h"
 #include "motor_ctrl.h"
 #include "utils.h"
+#include "motor_profile.h"
+#include <stddef.h>
 
 #define ENCODER_BITS            (14)
 #define ENCODER_CPR             (1 << ENCODER_BITS)
 #define ENCODER_CPR_DIV         (ENCODER_CPR >> 1)
 
-#define GEAR_RATIO              (12) 
-#define GEAR_RATIO_INV          (1.0f / GEAR_RATIO)
-
 #define CALIB_TABLE_SIZE        (512) 
-
-#define MOTOR_POLE_PAIRS        (10)
-
-#define MAIN_ENCODER_TEETH      (17)   // 主齿
-#define EX_ENCODER_TEETH        (18)   // 副齿
 
 #define ZERO_CALIB_MAX_VEL_Q14  (8192) // 约 0.5 rad/s 电机转速门限，超过此转速禁止标零副齿
 
@@ -28,6 +22,13 @@ typedef struct{
     int16_t encoder_reverse; // 编码器反向
     int16_t phase_reverse;   // 电机相序反向
 }encoder_config_t;
+
+#ifndef MC_HOST_TEST
+_Static_assert(sizeof(encoder_config_t) == 515U, "legacy EEPROM calibration size changed");
+_Static_assert(offsetof(encoder_config_t, linearity_table) == 1U &&
+               offsetof(encoder_config_t, encoder_reverse) == 513U &&
+               offsetof(encoder_config_t, phase_reverse) == 514U, "legacy EEPROM calibration offsets changed");
+#endif
 
 typedef struct{
     volatile uint16_t enc_degree_raw;      // 原始编码器值
