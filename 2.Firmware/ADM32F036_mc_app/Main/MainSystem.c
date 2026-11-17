@@ -10,6 +10,7 @@
 #include "iap.h"
 #include "encoder.h"
 #include "motor_ctrl.h"
+#include "field_weakening.h"
 #include "led.h"
 
 // xinZhi first commit 2026/4/21
@@ -67,6 +68,7 @@ void main(void)
     InitPeripherals();             
     InitForMotorApp();        
     InitForFunctionApp();
+    field_weakening_init(MOTOR_RATED_CUR, (uint32_t)DSP_CLOCK * 1000000UL);
     
     OD_init(); // 先初始化OD对象,初始化参数默认值
     

@@ -11,6 +11,8 @@
 #include "AngleSensor.h"
 #include "encoder.h"
 #include "canfd.h"
+#include "motor_ctrl.h"
+#include "field_weakening.h"
 
 void ParameterChange(void);	
 void CalCarrierWaveFreq(void);
@@ -1829,6 +1831,20 @@ void MotorControlISR()
     // 5. 应用最终周期，全程带符号运算，安全可靠
     gPWM.gPWMPrdApply = 2637 - base_offset + rand_num;
 
+#if MOTOR_CONTROL_MODE == MC_SENSORED_FOC
+    /* 快环最后写入实际电流环给定，后台 RunCaseRun 的 Id/Iq 复制不累加弱磁。 */
+    if (field_weakening_prepare(
+        motor_ctrl.state == MIT && RunSignal && ODObjs.is_calibrated &&
+        ODObjs.error_code == 0U && gMainStatus.ErrorCode == 0 &&
+        gMainStatus.RunStep == STATUS_RUN && gMainCmd.Command.bit.Start &&
+        !gMainCmd.Command.bit.StartDC && !gMainCmd.Command.bit.StopDC &&
+        pm_control_mode != 0U && pm_check_ip_flag == 0 && DCStart_flag == 0,
+        EPwm2Regs.TBPRD, pm_maxout_vol, Id, Iq)) {
+        pm_ref_id = field_weakening_status.id_target_code;
+        pm_ref_iq = field_weakening_status.iq_target_code;
+    }
+#endif
+
     if (gMainCmd.Command.bit.Start == TRUE)
     {
         // pm_check_ip_flag = PE.18 启动是否检测初始位置...
@@ -1859,6 +1875,9 @@ void MotorControlISR()
             FluxPostionCalation();
 #endif
             CurrentLoop();
+#if MOTOR_CONTROL_MODE == MC_SENSORED_FOC
+            field_weakening_voltage(&pm_ud, &pm_uq, pm_maxout_vol);
+#endif
             VolVectCalation();
             CalRatioFromVot();
 #if MOTOR_CONTROL_MODE == MC_SENSORED_FOC

@@ -246,16 +246,9 @@ void encoder_loop(void)
     if(motor_ctrl.state == MIT)
     {
         uint16_t mech_ang = (lined_deg - encoder_config.elec_degree_calib) & (ENCODER_CPR - 1);
-        uint16_t e_deg_temp = (uint16_t)(mech_ang * (MOTOR_POLE_PAIRS * 4));
-
-        if(encoder_config.phase_reverse)
-        {
-            encoder.elec_degree = e_deg_temp;
-        }
-        else
-        {
-            encoder.elec_degree = 65535 - e_deg_temp;   
-        }
+        // 校准已用 encoder_reverse 统一方向，LUT 和零偏也在同一坐标中。
+        // 闭环直接使用该方向，避免再次按相序翻转并使弱磁 Id 串入转矩方向。
+        encoder.elec_degree = (uint16_t)(mech_ang * (MOTOR_POLE_PAIRS * 4));
     }
 }
 
