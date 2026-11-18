@@ -1,7 +1,6 @@
 #include "canfd.h"
 #include "od.h"
 #include "motor_ctrl.h"
-#include "field_weakening.h"
 #include "MotorInclude.h"
 #include "encoder.h"
 #include "utils.h"
@@ -266,7 +265,8 @@ static void parse_frame(canFrame_t *frame)
                 frame->len = 20;     
                 *(uint16_t*)&frame->data[8] = ODObjs.error_code & ~ERR_HEARTBEAT_TIMEOUT;
             }
-            torque = Iq_To_Torque(imt_current_to_float(field_weakening_status.active ? 0 : gIMT.M, gIMT.T, MOTOR_RATED_CUR));
+            // 力矩由带符号的实测 Iq 估算，弱磁 Id 不参与。
+            torque = Iq_To_Torque(imt_current_to_float(0, gIMT.T, MOTOR_RATED_CUR));
             *(float*)&frame->data[0] = (float)encoder.degree_q14 / 16384.0f; // 减速端位置反馈(rad)
             *(float*)&frame->data[2] = (float)encoder.velocity_q14 / 16384.0f; // 减速端速度反馈(rad/s)
             *(float*)&frame->data[4] = torque; // 性能优化版本，减少50us计算时间
@@ -298,7 +298,8 @@ static void parse_frame(canFrame_t *frame)
                 frame->len = 20;     
                 *(uint16_t*)&frame->data[8] = ODObjs.error_code & ~ERR_HEARTBEAT_TIMEOUT;
             }
-            torque = Iq_To_Torque(imt_current_to_float(field_weakening_status.active ? 0 : gIMT.M, gIMT.T, MOTOR_RATED_CUR));
+            // 力矩由带符号的实测 Iq 估算，弱磁 Id 不参与。
+            torque = Iq_To_Torque(imt_current_to_float(0, gIMT.T, MOTOR_RATED_CUR));
             *(float*)&frame->data[0] = (float)encoder.degree_q14 / 16384.0f; // 减速端位置反馈(rad)
             *(float*)&frame->data[2] = (float)encoder.velocity_q14 / 16384.0f; // 减速端速度反馈(rad/s)
             *(float*)&frame->data[4] = torque; // 性能优化版本，减少50us计算时间
